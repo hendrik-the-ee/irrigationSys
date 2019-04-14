@@ -1,20 +1,25 @@
+#include <HTTPClient.h>
+
 
 // includes
 #include "Adafruit_seesaw.h"
+#include <WiFi.h>
+#include "wifiStuff.h"
+#include <HTTPClient.h>
 
 // definitions
 #define pinLed 5    // GPIO pin
 #define uS_TO_S_FACTOR 1000000  //Conversion factor for micro seconds to seconds
-#define TIME_TO_SLEEP  10        //Time ESP32 will go to sleep (in seconds)
+//#define TIME_TO_SLEEP  10        //Time ESP32 will go to sleep (in seconds)
 
 // global variables
 uint16_t timeNow = millis();
 uint16_t timeLed = 200;
 Adafruit_seesaw ss;   // soil sensor
 uint16_t loopCount = 0;
+uint16_t loopCountMax = 20;
 RTC_DATA_ATTR int bootCount = 0;
-
-
+int timeToSleep = 50;   // seconds
 
 //Function that prints the reason by which ESP32 has been awaken from sleep
 void print_wakeup_reason(){
@@ -31,7 +36,7 @@ void print_wakeup_reason(){
   }
 }
 
-void ssReadAndPrint() {
+uint16_t ssReadAndPrint() {
 // typical valuers for capRead.  300's = air.  600's = loamy, somewhat moist soil.  1000's = hand.
   float tempC = ss.getTemp();
   uint16_t capRead = ss.touchRead(0);
@@ -46,21 +51,10 @@ void ssReadAndPrint() {
     waterOrNot = "\t\t Don't water Plant!!!";
   }
   Serial.println("loopCount=" + String(loopCount) + ", T=" + String(tempC) + "C, Cap=" + String(capRead) + waterOrNot);
+  return capRead;
 }  // ssReadAndPrint
 
-
-void setup() {
-  pinMode(pinLed, OUTPUT);
-  
-  Serial.begin(115200);
-  bootCount++;
-  Serial.println("BootCount=" + String(bootCount));
-  print_wakeup_reason();  //Print the wakeup reason for ESP32
-  //Set timer to 5 seconds
-  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
-  Serial.println("Setup ESP32 to sleep for every " + String(TIME_TO_SLEEP) +" Seconds");
-
-  
+void wifiSetup() {
   if (!ss.begin(0x36)) {
     Serial.println("ERROR! seesaw not found");
     while(1);
@@ -68,26 +62,70 @@ void setup() {
     Serial.print("seesaw started! version: ");
     Serial.println(ss.getVersion(), HEX);
   }
+  WiFi.begin(wifiSsid, wifiPass);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi..");
+  }
+  Serial.println("Connected to the WiFi network");  
+} // wifiSetup
+
+void wifiSendData(uint16_t wifiDataToSend) {
+  if(WiFi.status()== WL_CONNECTED){   //Check WiFi connection status
+    HTTPClient http;
+    http.begin("http://192.168.0.12:8090/data");
+    http.addHeader("Content-Type", "text/plain");
+
+    int httpResponseCode = http.POST(String(wifiDataToSend));   //Send the actual POST request
+    if(httpResponseCode>0){
+      String timeToSleepString = http.getString();
+      timeToSleep = timeToSleepString.toInt();      
+//      Serial.println("httpResponseCode=" + String(httpResponseCode) + ", timeToSleep=" + String(timeToSleep));
+      esp_sleep_enable_timer_wakeup(timeToSleep * uS_TO_S_FACTOR);
+//      Serial.println("Setup ESP32 to sleep for every " + String(timeToSleep) +" Seconds");
+    }else{
+      Serial.println("HTTP POST Error");
+    }  // httpResponseCode
+    http.end();  //Free resources
+  } // if(WiFi.status()
+  else{
+    Serial.println("Error in WiFi connection");
+  }
+}  // wifiSendData
+
+void setup() {
+  pinMode(pinLed, OUTPUT);
+  
+  Serial.begin(115200);
+  bootCount++;
+//  Serial.println("BootCount=" + String(bootCount));
+//  print_wakeup_reason();  //Print the wakeup reason for ESP32
+  //Set timer to 5 seconds
+
+  wifiSetup();
+
 }  // setup
 
 void loop() {
   uint16_t timeDiff;
   uint16_t timeMillis = uint16_t(millis());
-  const uint16_t timeSample = 2000; //milliseconds
+  const uint16_t timeSoilSample = 2000; //milliseconds
   const uint16_t u16Max = 65535;
+  const uint16_t timeWifi = 5000; // milliseconds
+  uint16_t ssData;
 
   // set value for timeDiff
-  if ((timeMillis<timeSample) && ((u16Max-timeNow)<timeSample)) { // check for timeNow just about to wrap around, and millis() already did
+  if ((timeMillis<timeSoilSample) && ((u16Max-timeNow)<timeSoilSample)) { // check for timeNow just about to wrap around, and millis() already did
     timeDiff = timeMillis + uint16_t(u16Max-timeNow);
   }
   else {
     timeDiff = timeMillis - timeNow;
   }
-
-  if (timeDiff > timeSample)
+  if (timeDiff > timeSoilSample)
   {
     loopCount++;
-    ssReadAndPrint();             // do soil sensor stuff
+    ssData = ssReadAndPrint();             // do soil sensor stuff
+    wifiSendData(ssData);
     digitalWrite(pinLed, HIGH);   // turn the LED on (HIGH is the voltage level)
     timeNow = timeMillis;         // reset timer
   }
@@ -96,8 +134,7 @@ void loop() {
     digitalWrite(pinLed, LOW);   // turn the LED on (HIGH is the voltage level)
   }
 
-  if (loopCount >= 3) {
+  if (loopCount >= 1) {
       esp_deep_sleep_start();
-  }
-  
+  }  
 }  // loop
