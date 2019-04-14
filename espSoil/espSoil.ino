@@ -1,6 +1,3 @@
-#include <HTTPClient.h>
-
-
 // includes
 #include "Adafruit_seesaw.h"
 #include <WiFi.h>
@@ -19,9 +16,8 @@ Adafruit_seesaw ss;   // soil sensor
 uint16_t loopCount = 0;
 uint16_t loopCountMax = 20;
 RTC_DATA_ATTR int bootCount = 0;
-int timeToSleep = 50;   // seconds
+int timeToSleep = 5;   // seconds
 
-//Function that prints the reason by which ESP32 has been awaken from sleep
 void print_wakeup_reason(){
   esp_sleep_wakeup_cause_t wakeup_reason;
   wakeup_reason = esp_sleep_get_wakeup_cause();
@@ -73,7 +69,7 @@ void wifiSetup() {
 void wifiSendData(uint16_t wifiDataToSend) {
   if(WiFi.status()== WL_CONNECTED){   //Check WiFi connection status
     HTTPClient http;
-    http.begin("http://192.168.0.12:8090/data");
+    http.begin(httpAddr);
     http.addHeader("Content-Type", "text/plain");
 
     int httpResponseCode = http.POST(String(wifiDataToSend));   //Send the actual POST request
@@ -82,7 +78,6 @@ void wifiSendData(uint16_t wifiDataToSend) {
       timeToSleep = timeToSleepString.toInt();      
 //      Serial.println("httpResponseCode=" + String(httpResponseCode) + ", timeToSleep=" + String(timeToSleep));
       esp_sleep_enable_timer_wakeup(timeToSleep * uS_TO_S_FACTOR);
-//      Serial.println("Setup ESP32 to sleep for every " + String(timeToSleep) +" Seconds");
     }else{
       Serial.println("HTTP POST Error");
     }  // httpResponseCode
@@ -100,7 +95,6 @@ void setup() {
   bootCount++;
 //  Serial.println("BootCount=" + String(bootCount));
 //  print_wakeup_reason();  //Print the wakeup reason for ESP32
-  //Set timer to 5 seconds
 
   wifiSetup();
 
@@ -132,9 +126,9 @@ void loop() {
   else if ((digitalRead(pinLed)==1) && (timeDiff > timeLed))  // turn off LED
   {
     digitalWrite(pinLed, LOW);   // turn the LED on (HIGH is the voltage level)
-  }
+  } // timeDiff
 
   if (loopCount >= 1) {
       esp_deep_sleep_start();
-  }  
+  }
 }  // loop
