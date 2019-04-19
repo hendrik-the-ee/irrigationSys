@@ -17,10 +17,10 @@
 #include <WiFi.h>
 #include "wifiStuff.h"
 #include <HTTPClient.h>
-#include <ArduinoJson.h>
 
 // definitions
 #define pinLed 5                      // GPIO pin
+#define voltsIn A0
 #define ESPID_EEPROM_ADDR 0           // address in EEPROM for ESP32 ID
 #define EEPROM_SIZE 1
 #define uS_TO_S_FACTOR 1000000        //Conversion factor for micro seconds to seconds
@@ -34,38 +34,6 @@ uint16_t loopCount = 0;
 uint16_t loopCountMax = 20;
 RTC_DATA_ATTR int bootCount = 0;
 int timeToSleep = 5;   // seconds
-
-void print_wakeup_reason(){
-  esp_sleep_wakeup_cause_t wakeup_reason;
-  wakeup_reason = esp_sleep_get_wakeup_cause();
-  switch(wakeup_reason)
-  {
-    case 1  : Serial.println("Wakeup caused by external signal using RTC_IO"); break;
-    case 2  : Serial.println("Wakeup caused by external signal using RTC_CNTL"); break;
-    case 3  : Serial.println("Wakeup caused by timer"); break;
-    case 4  : Serial.println("Wakeup caused by touchpad"); break;
-    case 5  : Serial.println("Wakeup caused by ULP program"); break;
-    default : Serial.println("Wakeup was not caused by deep sleep"); break;
-  }
-}
-
-uint16_t ssReadAndPrint() {
-// typical valuers for capRead.  300's = air.  600's = loamy, somewhat moist soil.  1000's = hand.
-  float tempC = ss.getTemp();
-  uint16_t capRead = ss.touchRead(0);
-  String waterOrNot;
-
-  if (capRead < 750){
-    timeLed = 1500;     // water me!
-    waterOrNot = ".\t\t Water Plant!!";
-  }
-  else {
-    timeLed = 200;      // do not water!
-    waterOrNot = "\t\t Don't water Plant!!!";
-  }
-  Serial.println("loopCount=" + String(loopCount) + ", T=" + String(tempC) + "C, Cap=" + String(capRead) + waterOrNot);
-  return capRead;
-}  // ssReadAndPrint
 
 void wifiSetup() {
   if (!ss.begin(0x36)) {
@@ -93,6 +61,7 @@ void wifiSendData(String wifiDataToSend) {
     int httpResponseCode = http.POST(String(wifiDataToSend));   //Send the actual POST request
     if(httpResponseCode>0){
       String timeToSleepString = http.getString();
+      Serial.println("httpResponse=" + timeToSleepString);
       timeToSleep = timeToSleepString.toInt();      
     }else{
       Serial.println("HTTP POST Error");
@@ -107,7 +76,6 @@ void wifiSendData(String wifiDataToSend) {
 }  // void wifiSendData
 
 void setup() {
-//  int espID = EEPROM.read(ESPID_EEPROM_ADDR);
 
   Serial.begin(115200);
   pinMode(pinLed, OUTPUT);
@@ -122,8 +90,6 @@ void setup() {
 */
 
   bootCount++;
-//  Serial.println("BootCount=" + String(bootCount));
-//  print_wakeup_reason();  //Print the wakeup reason for ESP32
   wifiSetup();
 }  // setup
 
@@ -135,9 +101,10 @@ void loop() {
   uint16_t ssData;
   int testRead;
   const int espID = 1;
+  const int sensorID = 1;
   
-//  char PostData[] = "{\"name\": \"Fred\", \"age\": 31}"; // your JSON payload
-  String PostData =  "esp-000";
+  String PostData = "{\"esp32_id\": \"esp32_000";
+  String sensorType = "soilMoisture";
 
   // set value for timeDiff
   if ((timeMillis<timeSampleData) && ((u16Max-timeNow)<timeSampleData)) { // check for timeNow wrap around
@@ -150,16 +117,15 @@ void loop() {
   if (timeDiff > timeSampleData)
   {
     loopCount++;
-//    ssData = ssReadAndPrint();             // do soil sensor stuff    
 
     // String stuff
-    PostData.concat(espID);
-    PostData.concat("\r\n");
-    PostData.concat("s_0001a,soil_sensor,");
-    PostData.concat(ss.getTemp());
-    PostData.concat(", ");
-    PostData.concat(ss.touchRead(0));
-    PostData.concat("\r\n");
+    PostData.concat(espID);    PostData.concat("\", ");
+    PostData.concat("\"sensor_id\": ");    PostData.concat(sensorID); PostData.concat(", ");
+    PostData.concat("\"sensor_type\": "); PostData.concat("\"" + sensorType + "\", ");
+    PostData.concat("\"temp\": ");  PostData.concat(ss.getTemp());    PostData.concat(", ");
+    PostData.concat("\"moist\": "); PostData.concat(ss.touchRead(0)); PostData.concat(", ");
+    PostData.concat("\"VoltsIn\": "); PostData.concat(analogRead(voltsIn));
+    PostData.concat("}");
     wifiSendData(PostData);
     Serial.println(PostData);
 
