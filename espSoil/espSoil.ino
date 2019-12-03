@@ -125,7 +125,7 @@ void loop() {
     PostData.concat("\"sensor_type\": "); PostData.concat("\"" + sensorType + "\", ");
     PostData.concat("\"temp\": ");  PostData.concat(ss.getTemp());    PostData.concat(", ");
     PostData.concat("\"moist\": "); PostData.concat(ss.touchRead(0)); PostData.concat(", ");
-    PostData.concat("\"vBattAdcPin\": "); PostData.concat(analogRead(vBattAdcPin));
+    PostData.concat("\"volts_in\": "); PostData.concat(analogRead(vBattAdcPin));
     PostData.concat("}");
     wifiSendData(PostData);
     Serial.println(PostData);
