@@ -59,7 +59,7 @@ func (c *Client) GetAll() ([]*models.SensorData, error) {
 	return data, nil
 }
 
-func (c *Client) MarkAsDeleted(ids []int) error {
+func (c *Client) MarkAsDeleted(ids []int32) error {
 	sql := `UPDATE sensor_data SET can_delete=1 WHERE id=?`
 	statement, err := c.db.Prepare(sql)
 	if err != nil {

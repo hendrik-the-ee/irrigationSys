@@ -5,6 +5,11 @@ import (
 	"time"
 )
 
+const (
+	Layout        = "2006-01-02 15:04:05"
+	DefaultDBName = "./hydrobot.db"
+)
+
 type SensorData struct {
 	ID           int32
 	SensorID     int32     `json:"sensor_id"`
@@ -14,8 +19,6 @@ type SensorData struct {
 	VoltsIn      float32   `json:"volts_in"`
 	CreatedAt    time.Time `json:"created_at"`
 }
-
-const Layout = "2006-01-02 15:04:05"
 
 func GetColumnHeaders() []string {
 	return []string{

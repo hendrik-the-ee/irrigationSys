@@ -16,12 +16,10 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-const DefaultDBName = "./hydrobot.db"
-
 func main() {
 
 	projectID := os.Getenv("PROJECT_ID")
-c	if projectID == "" {
+	if projectID == "" {
 		log.Fatal("no project id supplied")
 	}
 
@@ -30,7 +28,7 @@ c	if projectID == "" {
 		log.Fatal("no bucket name supplied")
 	}
 
-	sqlite, err := sql.Open("sqlite3", DefaultDBName)
+	sqlite, err := sql.Open("sqlite3", models.DefaultDBName)
 	if err != nil {
 		log.Fatalf("error opening db: %v", err)
 	}
@@ -52,7 +50,7 @@ c	if projectID == "" {
 
 	csvWriter := csv.NewWriter(file)
 	csvWriter.Write(models.GetColumnHeaders())
-	var recordsToDelete []int
+	var recordsToDelete []int32
 	for _, d := range data {
 		csvWriter.Write(d.ToCSVRecord())
 		recordsToDelete = append(recordsToDelete, d.ID)

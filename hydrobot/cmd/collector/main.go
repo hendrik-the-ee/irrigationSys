@@ -9,18 +9,17 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hendrik-the-ee/hydrobot/hydrobot/handlers"
 	"github.com/hendrik-the-ee/hydrobot/hydrobot/internal/datastorage"
+	"github.com/hendrik-the-ee/hydrobot/hydrobot/models"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-const DefaultDBName = "./hydrobot.db"
-
 func main() {
 
-	if shouldCreateDB(DefaultDBName) {
-		os.Create(DefaultDBName)
+	if shouldCreateDB(models.DefaultDBName) {
+		os.Create(models.DefaultDBName)
 	}
 
-	sqlite, err := sql.Open("sqlite3", DefaultDBName)
+	sqlite, err := sql.Open("sqlite3", models.DefaultDBName)
 	if err != nil {
 		log.Fatalf("error opening db: %v", err)
 	}
