@@ -1,12 +1,12 @@
 /*
  * The Irrigation System
- * 
+ *
  * This program makes soil moisture measurements for a DIY irrigation system.  Specifically, ot does the following:
- * 1. Connects via WiFi to a Raspberry Pi, 
- * 2. Measures soil moisture and temperature from an Adafruit SeeSaw sensor, 
+ * 1. Connects via WiFi to a Raspberry Pi,
+ * 2. Measures soil moisture and temperature from an Adafruit SeeSaw sensor,
  * 3. Transmits soil moisture and temperature to the Pi
  * 4. Goes to sleep for a specific period of time.
- * 
+ *
  * Hendrik, 4/14/2019
  * program memory (4/14): 900768 bytes.  506935 bytes compressed.
  */
@@ -49,7 +49,7 @@ void wifiSetup() {
     delay(1000);
     Serial.println("Connecting to WiFi..");
   }
-  Serial.println("Connected to the WiFi network");  
+  Serial.println("Connected to the WiFi network");
 } // void wifiSetup
 
 void wifiSendData(String wifiDataToSend) {
@@ -62,7 +62,7 @@ void wifiSendData(String wifiDataToSend) {
     if(httpResponseCode>0){
 //      String timeToSleepString = http.getString();
 //      Serial.println("httpResponse=" + timeToSleepString);
-//      timeToSleep = timeToSleepString.toInt();      
+//      timeToSleep = timeToSleepString.toInt();
     }else{
       Serial.println("HTTP POST Error");
     }  // httpResponseCode
@@ -79,7 +79,7 @@ void setup() {
   Serial.begin(115200);
   pinMode(pinLed, OUTPUT);
   pinMode(vBattAdcPin, INPUT);
-  
+
 /*  if (espID == NULL) {
     Serial.println("Enter ESPID (value from 0 to 255): ");
     espID = Serial.read();
@@ -103,7 +103,7 @@ void loop() {
   int testRead;
   const int espID = 1;
   const int sensorID = 1;
-  
+
   String PostData = "{\"esp32_id\": \"esp32_000";
   String sensorType = "soilMoisture";
 
@@ -114,7 +114,7 @@ void loop() {
   else {                                  // no wraparound
     timeDiff = timeMillis - timeNow;
   } // if (timeMillis)
-  
+
   if (timeDiff > timeSampleData)
   {
     loopCount++;

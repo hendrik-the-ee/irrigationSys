@@ -1,0 +1,8 @@
+collector
+sender
+*.go~
+*.csv
+*.json
+*.db
+app-env
+app-env~
