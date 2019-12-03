@@ -23,7 +23,6 @@ func New(ds *datastorage.Client) *Handler {
 func (h *Handler) CollectData(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		// handle error
 		log.Fatal(err)
 	}
 
@@ -33,11 +32,12 @@ func (h *Handler) CollectData(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
+	log.Printf("storing data: %+v", sensorData)
+
 	// TODO: handle missing data
 	// and confirm data formats (ex. floats?)
 
 	if err := h.ds.Save(&sensorData); err != nil {
-		// handle error
 		log.Fatal(err)
 	}
 
@@ -45,5 +45,6 @@ func (h *Handler) CollectData(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
+	log.Printf("%+v\n", r.Body)
 	json.NewEncoder(w).Encode("OK")
 }

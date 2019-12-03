@@ -16,10 +16,12 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+const DefaultDBName = "./hydrobot.db"
+
 func main() {
 
 	projectID := os.Getenv("PROJECT_ID")
-	if projectID == "" {
+c	if projectID == "" {
 		log.Fatal("no project id supplied")
 	}
 
@@ -28,7 +30,7 @@ func main() {
 		log.Fatal("no bucket name supplied")
 	}
 
-	sqlite, err := sql.Open("sqlite3", "./hydrobot.db")
+	sqlite, err := sql.Open("sqlite3", DefaultDBName)
 	if err != nil {
 		log.Fatalf("error opening db: %v", err)
 	}
@@ -50,14 +52,15 @@ func main() {
 
 	csvWriter := csv.NewWriter(file)
 	csvWriter.Write(models.GetColumnHeaders())
+	var recordsToDelete []int
 	for _, d := range data {
-		log.Printf("writing: %v", d)
 		csvWriter.Write(d.ToCSVRecord())
+		recordsToDelete = append(recordsToDelete, d.ID)
 	}
 
 	csvWriter.Flush()
 
-	err = uploadData(context.Background(), filename)
+	err = uploadData(context.Background(), filename, bucketName)
 	if err != nil {
 		log.Fatalf("error uploading data to gcs: %v", err)
 	}
@@ -72,12 +75,12 @@ func main() {
 	log.Print("deleting data")
 
 	// if all data is successfully sent, trucate table
-	if err := ds.DeleteAll(); err != nil {
-		log.Printf("error deleting all data: %v", err)
+	if err := ds.MarkAsDeleted(recordsToDelete); err != nil {
+		log.Printf("error marking data as deleted: %v", err)
 	}
 }
 
-func uploadData(ctx context.Context, filename string) error {
+func uploadData(ctx context.Context, filename, bucketName string) error {
 	f, err := os.Open(filename)
 	if err != nil {
 		return err
@@ -89,7 +92,7 @@ func uploadData(ctx context.Context, filename string) error {
 		return err
 	}
 
-	bh := client.Bucket(BucketName)
+	bh := client.Bucket(bucketName)
 	// Check if the bucket exists
 	if _, err = bh.Attrs(ctx); err != nil {
 		return err

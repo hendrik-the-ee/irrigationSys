@@ -34,17 +34,19 @@ func (c *Client) Save(sd *models.SensorData) error {
 }
 
 func (c *Client) GetAll() ([]*models.SensorData, error) {
-	rows, err := c.db.Query(`SELECT sensor_id, sensor_type, temp, moist, volts_in, created_at
-                                 FROM sensor_data`)
+	rows, err := c.db.Query(`SELECT id, sensor_id, sensor_type, temp, moist, volts_in, created_at
+                                 FROM sensor_data WHERE can_delete=0`)
 	if err != nil {
 		return nil, err
 	}
+
+	defer rows.Close()
 
 	var data []*models.SensorData
 	for rows.Next() {
 		var createdAt string
 		var sd models.SensorData
-		rows.Scan(&sd.SensorID, &sd.SensorType, &sd.SoilTemp, &sd.SoilMoisture, &sd.VoltsIn, &createdAt)
+		rows.Scan(&sd.ID, &sd.SensorID, &sd.SensorType, &sd.SoilTemp, &sd.SoilMoisture, &sd.VoltsIn, &createdAt)
 		t, err := time.Parse(models.Layout, createdAt)
 		if err != nil {
 			return nil, err
@@ -57,8 +59,24 @@ func (c *Client) GetAll() ([]*models.SensorData, error) {
 	return data, nil
 }
 
+func (c *Client) MarkAsDeleted(ids []int) error {
+	sql := `UPDATE sensor_data SET can_delete=1 WHERE id=?`
+	statement, err := c.db.Prepare(sql)
+	if err != nil {
+		return err
+	}
+
+	for _, id := range ids {
+		_, err = statement.Exec(id)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (c *Client) DeleteAll() error {
-	sql := `DELETE FROM sensor_data`
+	sql := `DELETE FROM sensor_data WHERE can_delete=1`
 	statement, err := c.db.Prepare(sql)
 	if err != nil {
 		return err

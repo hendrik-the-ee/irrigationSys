@@ -6,7 +6,8 @@ import (
 )
 
 type SensorData struct {
-	SensorID     string    `json:"sensor_id"`
+	ID           int32
+	SensorID     int32     `json:"sensor_id"`
 	SensorType   string    `json:"sensor_type"`
 	SoilTemp     float32   `json:"temp"`
 	SoilMoisture float32   `json:"moist"`
@@ -32,8 +33,9 @@ func (s *SensorData) ToCSVRecord() []string {
 	soilMoist := fmt.Sprintf("%f", s.SoilMoisture)
 	voltsIn := fmt.Sprintf("%f", s.VoltsIn)
 	createdAt := s.CreatedAt.Format(Layout)
+	sensorID := fmt.Sprintf("%d", s.SensorID)
 	return []string{
-		s.SensorID,
+		sensorID,
 		s.SensorType,
 		soilTemp,
 		soilMoist,

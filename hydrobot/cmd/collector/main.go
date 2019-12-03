@@ -20,21 +20,21 @@ func main() {
 		os.Create(DefaultDBName)
 	}
 
-	sqlite, err := sql.Open("sqlite3", "./hydrobot.db")
+	sqlite, err := sql.Open("sqlite3", DefaultDBName)
 	if err != nil {
 		log.Fatalf("error opening db: %v", err)
 	}
 	defer sqlite.Close()
 
 	createTable := `CREATE TABLE
-                        IF NOT EXISTS sensor_data(id INTEGER PRIMARY KEY AUTOINCREMENT,
-                         sensor_id TEXT,
+                        IF NOT EXISTS sensor_data (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                         sensor_id INTEGER,
                          sensor_type TEXT,
                          temp REAL,
                          moist REAL,
                          volts_in REAL,
-                         mins_to_wake INTEGER,
-                         created_at TEXT)`
+                         created_at TEXT,
+                         can_delete INTEGER)`
 	statement, err := sqlite.Prepare(createTable)
 	_, err = statement.Exec()
 	if err != nil {
