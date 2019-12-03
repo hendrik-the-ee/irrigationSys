@@ -20,7 +20,7 @@
 
 // definitions
 #define pinLed 5                      // GPIO pin
-#define voltsIn A0
+#define vBattAdcPin 14                    // ADC
 #define ESPID_EEPROM_ADDR 0           // address in EEPROM for ESP32 ID
 #define EEPROM_SIZE 1
 #define uS_TO_S_FACTOR 1000000        //Conversion factor for micro seconds to seconds
@@ -33,7 +33,7 @@ Adafruit_seesaw ss;   // soil sensor
 uint16_t loopCount = 0;
 uint16_t loopCountMax = 20;
 RTC_DATA_ATTR int bootCount = 0;
-int timeToSleep = 5;   // seconds
+int timeToSleep = 20;   // seconds
 
 void wifiSetup() {
   if (!ss.begin(0x36)) {
@@ -60,9 +60,9 @@ void wifiSendData(String wifiDataToSend) {
 
     int httpResponseCode = http.POST(String(wifiDataToSend));   //Send the actual POST request
     if(httpResponseCode>0){
-      String timeToSleepString = http.getString();
-      Serial.println("httpResponse=" + timeToSleepString);
-      timeToSleep = timeToSleepString.toInt();      
+//      String timeToSleepString = http.getString();
+//      Serial.println("httpResponse=" + timeToSleepString);
+//      timeToSleep = timeToSleepString.toInt();      
     }else{
       Serial.println("HTTP POST Error");
     }  // httpResponseCode
@@ -72,14 +72,14 @@ void wifiSendData(String wifiDataToSend) {
     Serial.println("Error in WiFi connection");
   } // if(WiFi.status())
 
-  esp_sleep_enable_timer_wakeup(timeToSleep * uS_TO_S_FACTOR);
 }  // void wifiSendData
 
 void setup() {
 
   Serial.begin(115200);
   pinMode(pinLed, OUTPUT);
-
+  pinMode(vBattAdcPin, INPUT);
+  
 /*  if (espID == NULL) {
     Serial.println("Enter ESPID (value from 0 to 255): ");
     espID = Serial.read();
@@ -89,6 +89,7 @@ void setup() {
   }     // IF (espID)
 */
 
+  esp_sleep_enable_timer_wakeup(timeToSleep * uS_TO_S_FACTOR);
   bootCount++;
   wifiSetup();
 }  // setup
@@ -124,7 +125,7 @@ void loop() {
     PostData.concat("\"sensor_type\": "); PostData.concat("\"" + sensorType + "\", ");
     PostData.concat("\"temp\": ");  PostData.concat(ss.getTemp());    PostData.concat(", ");
     PostData.concat("\"moist\": "); PostData.concat(ss.touchRead(0)); PostData.concat(", ");
-    PostData.concat("\"VoltsIn\": "); PostData.concat(analogRead(voltsIn));
+    PostData.concat("\"vBattAdcPin\": "); PostData.concat(analogRead(vBattAdcPin));
     PostData.concat("}");
     wifiSendData(PostData);
     Serial.println(PostData);
@@ -137,7 +138,8 @@ void loop() {
     digitalWrite(pinLed, LOW);   // turn the LED on (HIGH is the voltage level)
   } // if (timeDiff)
 
-  if (loopCount >= 1) {
-      esp_deep_sleep_start();
+  if (loopCount >= 5) {
+    Serial.print("sleep for "); Serial.print(timeToSleep); Serial.println("s");
+    esp_deep_sleep_start();
   }
 }  // loop
