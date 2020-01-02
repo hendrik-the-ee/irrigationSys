@@ -17,7 +17,7 @@ type SensorData struct {
 	SoilTemp     float32   `json:"temp"`
 	SoilMoisture float32   `json:"moist"`
 	VoltsIn      float32   `json:"volts_in"`
-	CreatedAt    time.Time `json:"created_at"`
+	CreatedAt    time.Time `json:"created_at,omitempty"`
 }
 
 func GetColumnHeaders() []string {
