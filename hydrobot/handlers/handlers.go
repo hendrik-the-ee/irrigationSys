@@ -23,12 +23,14 @@ func New(ds *datastorage.Client) *Handler {
 func (h *Handler) CollectData(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		log.Println("error reading data")
 		log.Fatal(err)
 	}
 
 	var sensorData models.SensorData
 	if err := json.Unmarshal(b, &sensorData); err != nil {
 		// handle error
+		log.Println("error unmarshaling data")
 		log.Fatal(err)
 	}
 
@@ -38,6 +40,7 @@ func (h *Handler) CollectData(w http.ResponseWriter, r *http.Request) {
 	// and confirm data formats (ex. floats?)
 
 	if err := h.ds.Save(&sensorData); err != nil {
+		log.Print("error saving data")
 		log.Fatal(err)
 	}
 
