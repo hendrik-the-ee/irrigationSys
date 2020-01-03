@@ -13,14 +13,14 @@ type CloudStorage struct {
 	client     *storage.Client
 }
 
-func NewCloudStorage(bucketName string, client *storage.Client, ctx context.Context) *CloudStorage {
+func NewCloudStorage(bucketName string, client *storage.Client) *CloudStorage {
 	return &CloudStorage{
 		bucketName: bucketName,
 		client:     client,
 	}
 }
 
-func (gcp *CloudStorage) UploadToStorage(filename string) error {
+func (gcp *CloudStorage) UploadToStorage(filename string, ctx context.Context) error {
 	f, err := os.Open(filename)
 	if err != nil {
 		return err

@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
-	"github.com/hendrik-the-ee/hydrobot/hydrobot/clients"
+	"github.com/hendrik-the-ee/hydrobot/hydrobot/internal/clients"
 	"github.com/hendrik-the-ee/hydrobot/hydrobot/internal/datastorage"
 	"github.com/hendrik-the-ee/hydrobot/hydrobot/models"
 	_ "github.com/mattn/go-sqlite3"
@@ -27,7 +27,7 @@ func main() {
 
 	gcp, err := storage.NewClient(ctx)
 	if err != nil {
-		return err
+		log.Fatal("couldn't create google storage client")
 	}
 	gcs := clients.NewCloudStorage(bucketName, gcp)
 
