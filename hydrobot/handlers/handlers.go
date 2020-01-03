@@ -14,10 +14,9 @@ type Handler struct {
 	ds *datastorage.Client
 }
 
-func New(ds *datastorage.Client, config Config) *Handler {
+func New(ds *datastorage.Client) *Handler {
 	return &Handler{
-		ds:     ds,
-		config: config,
+		ds: ds,
 	}
 }
 
