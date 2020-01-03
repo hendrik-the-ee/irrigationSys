@@ -5,12 +5,12 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"time"
 
 	"cloud.google.com/go/storage"
+	"github.com/hendrik-the-ee/hydrobot/hydrobot/clients"
 	"github.com/hendrik-the-ee/hydrobot/hydrobot/internal/datastorage"
 	"github.com/hendrik-the-ee/hydrobot/hydrobot/models"
 	_ "github.com/mattn/go-sqlite3"
@@ -18,15 +18,18 @@ import (
 
 func main() {
 
-	projectID := os.Getenv("PROJECT_ID")
-	if projectID == "" {
-		log.Fatal("no project id supplied")
-	}
-
 	bucketName := os.Getenv("BUCKET_NAME")
 	if bucketName == "" {
 		log.Fatal("no bucket name supplied")
 	}
+
+	ctx := context.Background()
+
+	gcp, err := storage.NewClient(ctx)
+	if err != nil {
+		return err
+	}
+	gcs := clients.NewCloudStorage(bucketName, gcp)
 
 	sqlite, err := sql.Open("sqlite3", models.DefaultDBName)
 	if err != nil {
@@ -44,22 +47,15 @@ func main() {
 		log.Fatalf("error getting data: %v", err)
 	}
 
-	// write data to csv file
 	filename := fmt.Sprintf("%s.csv", time.Now().UTC().Format(models.Layout))
 	file, err := os.Create(filename)
 
-	csvWriter := csv.NewWriter(file)
-	csvWriter.Write(models.GetColumnHeaders())
-	var recordsToDelete []int32
-	for _, d := range data {
-		csvWriter.Write(d.ToCSVRecord())
-		recordsToDelete = append(recordsToDelete, d.ID)
+	recordsToDelete, err := writeDataToCSV(file, data)
+	if err != nil {
+		log.Fatalf("error creating csv file: %v", err)
 	}
 
-	csvWriter.Flush()
-
-	err = uploadData(context.Background(), filename, bucketName)
-	if err != nil {
+	if err := gcs.UploadToStorage(filename, ctx); err != nil {
 		log.Fatalf("error uploading data to gcs: %v", err)
 	}
 
@@ -69,42 +65,27 @@ func main() {
 		log.Printf("error removing temp csv file: %v", err)
 	}
 
-	// delete db rows
-	log.Print("deleting data")
+	// if data is successfully sent, mark as deletable
+	log.Print("marking data as deletable")
 
-	// if all data is successfully sent, trucate table
 	if err := ds.MarkAsDeleted(recordsToDelete); err != nil {
 		log.Printf("error marking data as deleted: %v", err)
 	}
 }
 
-func uploadData(ctx context.Context, filename, bucketName string) error {
-	f, err := os.Open(filename)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		return err
+func writeDataToCSV(file *os.File, data []*models.SensorData) ([]int32, error) {
+	csvWriter := csv.NewWriter(file)
+	if err := csvWriter.Write(models.GetColumnHeaders()); err != nil {
+		return nil, err
 	}
 
-	bh := client.Bucket(bucketName)
-	// Check if the bucket exists
-	if _, err = bh.Attrs(ctx); err != nil {
-		return err
+	var recordsToDelete []int32
+	for _, d := range data {
+		csvWriter.Write(d.ToCSVRecord())
+		recordsToDelete = append(recordsToDelete, d.ID)
 	}
 
-	obj := bh.Object(filename)
-	w := obj.NewWriter(ctx)
+	csvWriter.Flush()
 
-	if _, err := io.Copy(w, f); err != nil {
-		return err
-	}
-	if err := w.Close(); err != nil {
-		return err
-	}
-
-	return nil
+	return recordsToDelete, nil
 }
