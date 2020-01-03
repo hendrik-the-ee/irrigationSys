@@ -14,10 +14,16 @@ type Handler struct {
 	ds *datastorage.Client
 }
 
-func New(ds *datastorage.Client) *Handler {
+func New(ds *datastorage.Client, config Config) *Handler {
 	return &Handler{
-		ds: ds,
+		ds:     ds,
+		config: config,
 	}
+}
+
+func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
+	log.Printf("%+v\n", r.Body)
+	json.NewEncoder(w).Encode("OK")
 }
 
 func (h *Handler) CollectData(w http.ResponseWriter, r *http.Request) {
@@ -44,10 +50,5 @@ func (h *Handler) CollectData(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	json.NewEncoder(w).Encode("OK")
-}
-
-func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
-	log.Printf("%+v\n", r.Body)
 	json.NewEncoder(w).Encode("OK")
 }

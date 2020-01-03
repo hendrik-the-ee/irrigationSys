@@ -35,7 +35,7 @@ func (c *Client) Save(sd *models.SensorData) error {
 
 func (c *Client) GetAll() ([]*models.SensorData, error) {
 	rows, err := c.db.Query(`SELECT id, sensor_id, sensor_type, temp, moist, volts_in, created_at
-                                 FROM sensor_data WHERE can_delete=0`)
+                                 FROM sensor_data WHERE can_delete is NULL`)
 	if err != nil {
 		return nil, err
 	}
