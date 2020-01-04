@@ -8,12 +8,17 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/hendrik-the-ee/hydrobot/hydrobot/handlers"
+	"github.com/hendrik-the-ee/hydrobot/hydrobot/hydrolog"
 	"github.com/hendrik-the-ee/hydrobot/hydrobot/internal/datastorage"
 	"github.com/hendrik-the-ee/hydrobot/hydrobot/models"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
+	hlog, err := hydrolog.New("collector")
+	if err != nil {
+		log.Fatalf("error creating hydrolog: %v", err)
+	}
 
 	if shouldCreateDB(models.DefaultDBName) {
 		os.Create(models.DefaultDBName)
@@ -21,7 +26,7 @@ func main() {
 
 	sqlite, err := sql.Open("sqlite3", models.DefaultDBName)
 	if err != nil {
-		log.Fatalf("error opening db: %v", err)
+		hlog.Fatalf("error opening db: %v", err)
 	}
 	defer sqlite.Close()
 
@@ -37,18 +42,18 @@ func main() {
 	statement, err := sqlite.Prepare(createTable)
 	_, err = statement.Exec()
 	if err != nil {
-		log.Fatalf("error creating table: %v", err)
+		hlog.Fatalf("error creating table: %v", err)
 	}
 
 	ds := datastorage.New(sqlite)
-	h := handlers.New(ds)
+	h := handlers.New(ds, hlog)
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/data", h.CollectData).Methods("POST")
 	router.HandleFunc("/ping", h.Ping).Methods("GET")
 
-	log.Println("Listening on port :8080")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	hlog.Info("Listening on port :8080")
+	hlog.Fatal(http.ListenAndServe(":8080", router))
 }
 
 func shouldCreateDB(name string) bool {
