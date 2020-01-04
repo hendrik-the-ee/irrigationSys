@@ -24,3 +24,5 @@ scp -i ~/.ssh/id_rsa app-env $TARGET_USER@$TARGET_HOST:$TARGET_DIR/app-env
 scp -i ~/.ssh/id_rsa creds.json $TARGET_USER@$TARGET_HOST:$TARGET_DIR/creds.json
 scp -i ~/.ssh/id_rsa collector $TARGET_USER@$TARGET_HOST:$TARGET_DIR/collector
 scp -i ~/.ssh/id_rsa sender $TARGET_USER@$TARGET_HOST:$TARGET_DIR/sender
+scp -i ~/.ssh/id_rsa run_sender.sh $TARGET_USER@$TARGET_HOST:$TARGET_DIR/run_sender.sh
+echo "Done uploading files to Raspberry Pi"

@@ -1,6 +1,6 @@
 #!/bin/bash
-go build hydrobot/cmd/sender/main.go
-mv main sender
-
-source app-env
+echo "starting sender"
+cd /home/pi/hydrobot/
+. app-env
 ./sender
+echo "completed sender run"

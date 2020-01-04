@@ -7,4 +7,4 @@
 # │ │ └─────────────── day of month (1 - 31)
 # │ └──────────────────── hour (0 - 23)
 # └───────────────────────── min (0 - 59)
-(crontab -l && echo "0 */12 * * *  ~/hydrobot/run_sender.sh") | crontab -
+0 */12 * * *  /home/pi/hydrobot/run_sender.sh
