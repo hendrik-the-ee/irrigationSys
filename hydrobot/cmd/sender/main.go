@@ -61,17 +61,8 @@ func main() {
 	filename := fmt.Sprintf("%s.csv", time.Now().UTC().Format(models.Layout))
 	file, err := os.Create(filename)
 
-	var startTS time.Time
-	var endTS time.Time
-	switch {
-	case len(data) == 1:
-		startTS = data[0].CreatedAt
-		endTS = data[0].CreatedAt
-	case len(data) > 1:
-		startTS = data[0].CreatedAt
-		endTS = data[len(data)-1].CreatedAt
-	default:
-	}
+	startTS = data[0].CreatedAt
+	endTS = data[len(data)-1].CreatedAt
 
 	fields := logrus.Fields{
 		"file":        filename,
