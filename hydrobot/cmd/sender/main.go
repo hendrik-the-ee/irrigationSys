@@ -61,8 +61,8 @@ func main() {
 	filename := fmt.Sprintf("%s.csv", time.Now().UTC().Format(models.Layout))
 	file, err := os.Create(filename)
 
-	startTS = data[0].CreatedAt
-	endTS = data[len(data)-1].CreatedAt
+	startTS := data[0].CreatedAt
+	endTS := data[len(data)-1].CreatedAt
 
 	fields := logrus.Fields{
 		"file":        filename,
