@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/hendrik-the-ee/hydrobot/hydrobot/models"
+	"github.com/hendrik-the-ee/irrigationSys/models"
 )
 
 // Client represents the sqlite database client
