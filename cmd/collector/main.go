@@ -15,7 +15,6 @@ import (
 )
 
 func main() {
-	// Test
 	hlog, err := hydrolog.New("collector")
 	if err != nil {
 		log.Fatalf("error creating hydrolog: %v", err)
