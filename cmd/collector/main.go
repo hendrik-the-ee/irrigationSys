@@ -7,9 +7,9 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/hendrik-the-ee/irrigationSys/datastorage"
 	"github.com/hendrik-the-ee/irrigationSys/handlers"
 	"github.com/hendrik-the-ee/irrigationSys/hydrolog"
-	"github.com/hendrik-the-ee/irrigationSys/internal/datastorage"
 	"github.com/hendrik-the-ee/irrigationSys/models"
 	_ "github.com/mattn/go-sqlite3"
 )
