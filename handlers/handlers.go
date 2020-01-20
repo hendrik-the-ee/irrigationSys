@@ -56,6 +56,8 @@ func (h *Handler) CollectData(w http.ResponseWriter, r *http.Request) {
 		"volts_in":      sd.VoltsIn,
 	}
 
+	log.WithFields(fields).Info("data received")
+
 	if err := h.ds.Save(&sd); err != nil {
 		log.WithFields(fields).Errorf("error saving data: %v", err)
 	}
