@@ -5,8 +5,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/hendrik-the-ee/irrigationSys/internal/datastorage"
-	"github.com/hendrik-the-ee/irrigationSys/models"
+	"github.com/hendrik-the-ee/irrigationSys/hydrobot/internal/datastorage"
+	"github.com/hendrik-the-ee/irrigationSys/hydrobot/models"
 	"github.com/sirupsen/logrus"
 )
 

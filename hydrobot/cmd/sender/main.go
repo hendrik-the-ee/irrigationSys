@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
-	"github.com/hendrik-the-ee/irrigationSys/hydrolog"
-	"github.com/hendrik-the-ee/irrigationSys/internal/clients"
-	"github.com/hendrik-the-ee/irrigationSys/internal/datastorage"
-	"github.com/hendrik-the-ee/irrigationSys/models"
+	"github.com/hendrik-the-ee/irrigationSys/hydrobot/hydrolog"
+	"github.com/hendrik-the-ee/irrigationSys/hydrobot/internal/clients"
+	"github.com/hendrik-the-ee/irrigationSys/hydrobot/models"
+	"github.com/hendrik-the-ee/irrigationSys/hyrobot/internal/datastorage"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/sirupsen/logrus"
 )

@@ -7,10 +7,10 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
-	"github.com/hendrik-the-ee/irrigationSys/handlers"
-	"github.com/hendrik-the-ee/irrigationSys/hydrolog"
-	"github.com/hendrik-the-ee/irrigationSys/internal/datastorage"
-	"github.com/hendrik-the-ee/irrigationSys/models"
+	"github.com/hendrik-the-ee/irrigationSys/hydrobot/handlers"
+	"github.com/hendrik-the-ee/irrigationSys/hydrobot/hydrolog"
+	"github.com/hendrik-the-ee/irrigationSys/hydrobot/internal/datastorage"
+	"github.com/hendrik-the-ee/irrigationSys/hydrobot/models"
 	_ "github.com/mattn/go-sqlite3"
 )
 
