@@ -2,8 +2,8 @@
 TARGET_USER=pi
 TARGET_DIR=/home/pi/hydrobot
 CC=arm-linux-musleabihf-gcc
-COLLCTR_PATH=hydrobot/cmd/collector/main.go
-SENDER_PATH=hydrobot/cmd/sender/main.go
+COLLCTR_PATH=cmd/collector/main.go
+SENDER_PATH=cmd/sender/main.go
 FLAGS=
 
 if [ "$1" == "" ]; then
