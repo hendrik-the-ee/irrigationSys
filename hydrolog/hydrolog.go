@@ -1,9 +1,6 @@
 package hydrolog
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/sirupsen/logrus"
 )
 
@@ -19,14 +16,6 @@ func New(serviceName string) (*logrus.Entry, error) {
 	formatter.FullTimestamp = true
 
 	logger.Formatter = UTCFormatter{&formatter}
-
-	filepath := fmt.Sprintf("%s.log", serviceName)
-
-	f, err := os.OpenFile(filepath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
-	if err != nil {
-		return nil, err
-	}
-	logger.Out = f
 
 	entry := logger.WithFields(logrus.Fields{"service_name": serviceName})
 
