@@ -7,4 +7,4 @@
 # │ │ └─────────────── day of month (1 - 31)
 # │ └──────────────────── hour (0 - 23)
 # └───────────────────────── min (0 - 59)
-0 */12 * * *  /home/pi/hydrobot/run_sender.sh
+0 */12 * * *  /home/pi/hydrobot/run_sender.sh >> /home/pi/hydrobot/sender.log 2>&1
