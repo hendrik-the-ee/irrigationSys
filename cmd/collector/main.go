@@ -21,6 +21,7 @@ func main() {
 	}
 
 	if shouldCreateDB(models.DefaultDBName) {
+		hlog.Info("creating database")
 		os.Create(models.DefaultDBName)
 	}
 
