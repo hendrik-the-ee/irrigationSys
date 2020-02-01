@@ -5,14 +5,20 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 
 	"github.com/gorilla/mux"
 	"github.com/hendrik-the-ee/irrigationSys/datastorage"
 	"github.com/hendrik-the-ee/irrigationSys/handlers"
 	"github.com/hendrik-the-ee/irrigationSys/hydrolog"
-	"github.com/hendrik-the-ee/irrigationSys/models"
 	_ "github.com/mattn/go-sqlite3"
+
+	"github.com/kelseyhightower/envconfig"
 )
+
+type Config struct {
+	DBPath string `envconfig:"COLLECTOR_DB_PATH" required:"true"`
+}
 
 func main() {
 	hlog, err := hydrolog.New("collector")
@@ -20,11 +26,19 @@ func main() {
 		log.Fatalf("error creating hydrolog: %v", err)
 	}
 
-	if shouldCreateDB(models.DefaultDBName) {
-		os.Create(models.DefaultDBName)
+	var config Config
+	err = envconfig.Process("collector", &config)
+
+	if shouldCreateDB(config.DBPath) {
+		cmd := exec.Command("sqlite3", config.DBPath)
+		stdout, err := cmd.Output()
+		hlog.Info(string(stdout))
+		if err != nil {
+			hlog.Fatalf("error creating databse: %v", err)
+		}
 	}
 
-	sqlite, err := sql.Open("sqlite3", models.DefaultDBName)
+	sqlite, err := sql.Open("sqlite3", config.DBPath)
 	if err != nil {
 		hlog.Fatalf("error opening db: %v", err)
 	}
