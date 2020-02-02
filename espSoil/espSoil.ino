@@ -19,40 +19,57 @@
 #include <HTTPClient.h>
 
 // definitions
-#define pinLed 5                      // GPIO pin
-#define vBattAdcPin 14                    // ADC
-#define ESPID_EEPROM_ADDR 0           // address in EEPROM for ESP32 ID
+#define espID 3              // unique ID for every device
+#define sensorID 1           // unique ID for every sensor type
+#define pinLed 5             // GPIO pin
+#define seesawPwrPin 4       // GPIO pin provides switchable power for the seesaw to extend battery life
+#define battAdcPin 33        // must be an ADC2 pin or will not work due to conflict with wifi.h!!
+#define ESPID_EEPROM_ADDR 0  // address in EEPROM for ESP32 ID
 #define EEPROM_SIZE 1
 #define uS_TO_S_FACTOR 1000000        //Conversion factor for micro seconds to seconds
 
 // global variables
-
 uint16_t timeNow = millis();
-uint16_t timeLed = 200;
+const int timeToSleep = 5;   // seconds
+const int adcLoopCountMax = 5;
+const int wifiRetryCountMax = 10;
 Adafruit_seesaw ss;   // soil sensor
-uint16_t loopCount = 0;
-uint16_t loopCountMax = 20;
 RTC_DATA_ATTR int bootCount = 0;
-int timeToSleep = 20;   // seconds
+bool seeSawExists = 0;
 
-void wifiSetup() {
+bool seeSawSetup() {
   if (!ss.begin(0x36)) {
     Serial.println("ERROR! seesaw not found");
-    while(1);
+    return 0;
   } else {
     Serial.print("seesaw started! version: ");
     Serial.println(ss.getVersion(), HEX);
+    return 1;
   } // (!ss.begin)
+} // void seeSawSetup
+  
 
+void wifiSetup() {
+  int wifiRetryCount = 0;
+  
   WiFi.begin(wifiSsid, wifiPass);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println("Connecting to WiFi..");
-  }
-  Serial.println("Connected to the WiFi network");
+  while (WiFi.status() != WL_CONNECTED && wifiRetryCount < wifiRetryCountMax) {
+//    if (wifiRetryCount < wifiRetryCountMax) {
+    delay(300);
+    wifiRetryCount++;
+    Serial.print("WiFi connect attempt ");  Serial.println(wifiRetryCount);
+//    } // if (wifiRetryCount)
+  } // while    
+
+  if (wifiRetryCount < wifiRetryCountMax)
+    Serial.println("Connected to the WiFi network");
+
 } // void wifiSetup
 
-void wifiSendData(String wifiDataToSend) {
+
+bool wifiSendData(String wifiDataToSend) {
+  bool wifiSendError;
+  
   if(WiFi.status()== WL_CONNECTED){   //Check WiFi connection status
     HTTPClient http;
     http.begin(httpAddr);
@@ -63,23 +80,29 @@ void wifiSendData(String wifiDataToSend) {
 //      String timeToSleepString = http.getString();
 //      Serial.println("httpResponse=" + timeToSleepString);
 //      timeToSleep = timeToSleepString.toInt();
+      wifiSendError = 0;
     }else{
       Serial.println("HTTP POST Error");
+      wifiSendError = 1;
     }  // httpResponseCode
     http.end();  //Free resources
   } // if(WiFi.status()
   else{
     Serial.println("Error in WiFi connection");
+    wifiSendError = 1;
   } // if(WiFi.status())
-
+  return wifiSendError;
 }  // void wifiSendData
 
+
 void setup() {
-
-  Serial.begin(115200);
   pinMode(pinLed, OUTPUT);
-  pinMode(vBattAdcPin, INPUT);
+  pinMode(seesawPwrPin, OUTPUT);
+  pinMode(battAdcPin, INPUT);
 
+  digitalWrite(seesawPwrPin, HIGH);   // turn on the seesaw
+  delay(50);
+  Serial.begin(115200);  
 /*  if (espID == NULL) {
     Serial.println("Enter ESPID (value from 0 to 255): ");
     espID = Serial.read();
@@ -88,22 +111,28 @@ void setup() {
     Serial.println("ESPID=" + String(espID));
   }     // IF (espID)
 */
-
   esp_sleep_enable_timer_wakeup(timeToSleep * uS_TO_S_FACTOR);
+  Serial.print("esp_sleep_enable_timer_wakeup: time=");  Serial.println(timeToSleep);
+  seeSawExists = seeSawSetup();
   bootCount++;
   wifiSetup();
 }  // setup
 
+
 void loop() {
   uint16_t timeDiff;
   uint16_t timeMillis = uint16_t(millis());
-  const uint16_t timeSampleData = 2000; //milliseconds
+  uint16_t soilMoisture;
+  uint16_t soilTemp;
+  const uint16_t timeSampleData = 200; //milliseconds
+  const uint16_t timeLed = 50;
   const uint16_t u16Max = 65535;
+  uint16_t vBattAdc; // = analogRead(battAdcPin);   // need averaging and to space these out.  10x probably best.
   uint16_t ssData;
   int testRead;
-  const int espID = 1;
-  const int sensorID = 1;
-
+  bool wifiSendError = 0;
+  bool sampledSent = 0;
+  
   String PostData = "{\"esp32_id\": \"esp32_000";
   String sensorType = "soilMoisture";
 
@@ -117,28 +146,44 @@ void loop() {
 
   if (timeDiff > timeSampleData)
   {
-    loopCount++;
+    for (int adcLoopCount=0; adcLoopCount<adcLoopCountMax; adcLoopCount++) {
+      vBattAdc += analogRead(battAdcPin);   // need averaging and to space these out.  10x probably best.
+      delay(50);
+    }  //for (adcLoopCount)
 
-    // String stuff
+    if (seeSawExists) {
+      soilMoisture = ss.touchRead(0);
+      soilTemp = ss.getTemp();
+    }
+    else {
+      soilMoisture = 0;
+      soilTemp = 0;
+    }
+
+    sampledSent = 1;
+    // String stuff (with all sensor reads baked in)
     PostData.concat(espID);    PostData.concat("\", ");
     PostData.concat("\"sensor_id\": ");    PostData.concat(sensorID); PostData.concat(", ");
     PostData.concat("\"sensor_type\": "); PostData.concat("\"" + sensorType + "\", ");
-    PostData.concat("\"temp\": ");  PostData.concat(ss.getTemp());    PostData.concat(", ");
-    PostData.concat("\"moist\": "); PostData.concat(ss.touchRead(0)); PostData.concat(", ");
-    PostData.concat("\"volts_in\": "); PostData.concat(analogRead(vBattAdcPin));
+    PostData.concat("\"temp\": ");  PostData.concat(String(ss.getTemp(),1));    PostData.concat(", ");
+    PostData.concat("\"moist\": "); PostData.concat(soilMoisture); PostData.concat(", ");
+//    PostData.concat("\"moist\": "); PostData.concat(ss.touchRead(0)); PostData.concat(", ");
+    PostData.concat("\"volts_in\": "); PostData.concat(String(vBattAdc*3.3/(2048*adcLoopCountMax),3));
     PostData.concat("}");
-    wifiSendData(PostData);
+    wifiSendError = wifiSendData(PostData);
+
     Serial.println(PostData);
 
     digitalWrite(pinLed, HIGH);   // turn the LED on (HIGH is the voltage level)
     timeNow = timeMillis;         // reset timer
-  }
+  } // if (timeDiff)
   else if ((digitalRead(pinLed)==1) && (timeDiff > timeLed))  // turn off LED
   {
     digitalWrite(pinLed, LOW);   // turn the LED on (HIGH is the voltage level)
   } // if (timeDiff)
 
-  if (loopCount >= 5) {
+  if (sampledSent) {
+    digitalWrite(seesawPwrPin, LOW);   // turn on the seesaw
     Serial.print("sleep for "); Serial.print(timeToSleep); Serial.println("s");
     esp_deep_sleep_start();
   }
