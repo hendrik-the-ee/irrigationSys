@@ -27,7 +27,6 @@ def main():
     c = conn.cursor()
 
     with open(filename, 'r') as f:
-        # read through lines, skipping anything with msg=ping or user_agent=curl
         for line in f:
             if not "info" in line:
                 print("not an info log")
