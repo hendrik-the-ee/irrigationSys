@@ -1,12 +1,27 @@
 #!/usr/local/bin/python3.6
 
 import sqlite3
+import sys
+import os
 
 def main():
-    # get filename from command line args
-    #filename = "/var/log/collector/collector.log"
-    filename = "test.log"
-    db_name = "hydrobot.db"
+    if len(sys.argv) != 3:
+        print("usage: <log filename> <db name>")
+        sys.exit(0)
+    filename = sys.argv[1]
+    db_name = sys.argv[2]
+
+    if not os.path.exists(filename):
+        print("please enter a valid filename")
+        sys.exit(0)
+
+    if not os.path.exists(db_name):
+        print("db does not exist")
+        sys.exit(0)
+
+    if not db_name.endswith('.db'):
+        print("please enter a valid db name")
+        sys.exit(0)
 
     conn = sqlite3.connect(db_name)
     c = conn.cursor()
@@ -14,6 +29,9 @@ def main():
     with open(filename, 'r') as f:
         # read through lines, skipping anything with msg=ping or user_agent=curl
         for line in f:
+            if not "info" in line:
+                print("not an info log")
+                continue
             data = line.strip().split('info ')[1].split(' ')
             if len(data) == 9:
                 user_agent = data[7].split('[')[1].strip(']"')
