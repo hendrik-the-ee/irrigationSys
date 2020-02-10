@@ -1,23 +1,19 @@
 package main
 
 import (
-	"database/sql"
 	"log"
 	"net/http"
-	"os"
-	"os/exec"
 
 	"github.com/gorilla/mux"
-	"github.com/hendrik-the-ee/irrigationSys/datastorage"
+	"github.com/hendrik-the-ee/irrigationSys/datamanager"
 	"github.com/hendrik-the-ee/irrigationSys/handlers"
 	"github.com/hendrik-the-ee/irrigationSys/hydrolog"
-	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/kelseyhightower/envconfig"
 )
 
 type Config struct {
-	DBPath string `envconfig:"COLLECTOR_DB_PATH" required:"true"`
+	Filepath string `envconfig:"FILE_STORAGE_PATH" required:"true"`
 }
 
 func main() {
@@ -29,38 +25,8 @@ func main() {
 	var config Config
 	err = envconfig.Process("collector", &config)
 
-	if shouldCreateDB(config.DBPath) {
-		cmd := exec.Command("sqlite3", config.DBPath)
-		stdout, err := cmd.Output()
-		hlog.Info(string(stdout))
-		if err != nil {
-			hlog.Fatalf("error creating databse: %v", err)
-		}
-	}
-
-	sqlite, err := sql.Open("sqlite3", config.DBPath)
-	if err != nil {
-		hlog.Fatalf("error opening db: %v", err)
-	}
-	defer sqlite.Close()
-
-	createTable := `CREATE TABLE
-                        IF NOT EXISTS sensor_data (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                         sensor_id INTEGER,
-                         sensor_type TEXT,
-                         temp REAL,
-                         moist REAL,
-                         volts_in REAL,
-                         created_at TEXT,
-                         can_delete INTEGER)`
-	statement, err := sqlite.Prepare(createTable)
-	_, err = statement.Exec()
-	if err != nil {
-		hlog.Fatalf("error creating table: %v", err)
-	}
-
-	ds := datastorage.New(sqlite)
-	h := handlers.New(ds, hlog)
+	dm := datamanager.New(config.Filepath)
+	h := handlers.New(dm, hlog)
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/data", h.CollectData).Methods("POST")
@@ -68,9 +34,4 @@ func main() {
 
 	hlog.Info("Listening on port :8080")
 	hlog.Fatal(http.ListenAndServe(":8080", router))
-}
-
-func shouldCreateDB(name string) bool {
-	_, err := os.Stat(name)
-	return os.IsNotExist(err)
 }
