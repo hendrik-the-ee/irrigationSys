@@ -1,19 +1,18 @@
 package datamanager
 
 import (
+	"encoding/csv"
+	"fmt"
 	"io"
 	"os"
-	"strings"
 	"sync"
+	"time"
 
 	"github.com/hendrik-the-ee/irrigationSys/models"
 )
 
-var (
-	mode = os.FileMode(0700)
-)
+var mode = os.FileMode(0700)
 
-// Client represents the sqlite database client
 type Client struct {
 	filepath string
 	mu       *sync.Mutex
@@ -26,48 +25,34 @@ func New(filepath string) *Client {
 	}
 }
 
-func (c *Client) AppendToFile(sd *models.SensorData) (string, error) {
+func (c *Client) AppendToFile(sd *models.SensorData) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	var createdFile bool
+	var rows [][]string
 
 	if _, err := os.Stat(c.filepath); os.IsNotExist(err) {
-		os.MkdirAll(c.filepath, mode)
-		createdFile = true
+		_, err := os.Create(c.filepath)
+		if err != nil {
+			return err
+		}
+		rows = append(rows, models.GetColumnHeaders())
 	}
 
-	f, err := os.OpenFile(c.filepath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	rows = append(rows, sd.ToCSVRecord())
+
+	f, err := os.OpenFile(c.filepath, os.O_WRONLY|os.O_APPEND, mode)
 	if err != nil {
-		return "", err
+		return err
 	}
 	defer f.Close()
 
-	if createdFile {
-		headers := strings.Join(models.GetColumnHeaders(), ",")
-		if _, err := f.WriteString(headers); err != nil {
-			return f.Name(), err
-		}
-	}
+	w := csv.NewWriter(f)
+	defer w.Flush()
 
-	record := strings.Join(sd.ToCSVRecord(), ",")
-	if _, err := f.WriteString(record); err != nil {
-		return f.Name(), err
-	}
-
-	return f.Name(), err
-}
-
-func (c *Client) CreateCopy(newFilepath string, deleteOld bool) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if err := copyFile(c.filepath, newFilepath); err != nil {
-		return err
-	}
-
-	if deleteOld {
-		if err := os.Remove(c.filepath); err != nil {
+	for _, row := range rows {
+		err := w.Write(row)
+		if err != nil {
 			return err
 		}
 	}
@@ -75,7 +60,19 @@ func (c *Client) CreateCopy(newFilepath string, deleteOld bool) error {
 	return nil
 }
 
-func copyFile(src, dst string) error {
+func (c *Client) ArchiveFile(filepath string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	// rename file to archive
+	now := time.Now().UTC()
+	year, month, day := now.Date()
+
+	archiveFileName := fmt.Sprintf("archive.%v_%v_%v_%v.csv", year, month, day, now.Hour())
+	return moveFile(filepath, archiveFileName)
+}
+
+func moveFile(src, dst string) error {
 	in, err := os.Open(src)
 	if err != nil {
 		return err
@@ -92,5 +89,6 @@ func copyFile(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	return out.Close()
+
+	return os.Remove(src)
 }

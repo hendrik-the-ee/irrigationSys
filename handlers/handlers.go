@@ -1,25 +1,35 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"time"
 
+	"github.com/hendrik-the-ee/irrigationSys/clients"
 	"github.com/hendrik-the-ee/irrigationSys/datamanager"
 	"github.com/hendrik-the-ee/irrigationSys/models"
 	"github.com/sirupsen/logrus"
 )
 
+const FileUploadFrequency = 30 * time.Second
+
 type Handler struct {
-	dm  *datamanager.Client
-	log *logrus.Entry
+	dm             *datamanager.Client
+	gcs            *clients.CloudStorage
+	filepath       string
+	log            *logrus.Entry
+	lastUploadTime time.Time
 }
 
-func New(dm *datamanager.Client, log *logrus.Entry) *Handler {
+func New(dm *datamanager.Client, gcs *clients.CloudStorage, log *logrus.Entry, fp string) *Handler {
 	return &Handler{
-		dm:  dm,
-		log: log,
+		dm:             dm,
+		gcs:            gcs,
+		log:            log,
+		filepath:       fp,
+		lastUploadTime: time.Now().UTC(),
 	}
 }
 
@@ -52,22 +62,48 @@ func (h *Handler) CollectData(w http.ResponseWriter, r *http.Request) {
 	sd.CreatedAt = time.Now().UTC()
 
 	fields := logrus.Fields{
-		"user_agent":    r.Header["User-Agent"],
-		"sensor_id":     sd.SensorID,
-		"sensor_type":   sd.SensorType,
-		"soil_temp":     sd.SoilTemp,
-		"soil_moisture": sd.SoilMoisture,
-		"volts_in":      sd.VoltsIn,
-		"created_at":    sd.CreatedAt.Format(models.Layout),
+		"user_agent":       r.Header["User-Agent"],
+		"sensor_id":        sd.SensorID,
+		"sensor_type":      sd.SensorType,
+		"soil_temp":        sd.SoilTemp,
+		"soil_moisture":    sd.SoilMoisture,
+		"volts_in":         sd.VoltsIn,
+		"created_at":       sd.CreatedAt.Format(models.Layout),
+		"last_upload_time": h.lastUploadTime,
 	}
 
 	log.WithFields(fields).Info("data received")
 
-	if _, err := h.dm.AppendToFile(&sd); err != nil {
+	if err := h.dm.AppendToFile(&sd); err != nil {
 		log.WithFields(fields).Errorf("error saving data: %v", err)
 		// TODO: create a passive nagios check to alert on this failing
 		return
 	}
 
+	ctx := context.Background()
+
+	if h.shouldUploadFile() {
+		fields := logrus.Fields{
+			"filepath":         h.filepath,
+			"last_upload_time": h.lastUploadTime,
+		}
+		if err := h.gcs.UploadToStorage(h.filepath, ctx); err != nil {
+			log.WithFields(fields).Errorf("error uploading data: %v", err)
+			return
+		}
+
+		h.lastUploadTime = time.Now().UTC()
+
+		if err := h.dm.ArchiveFile(h.filepath); err != nil {
+			log.WithFields(fields).Errorf("error resetting file: %v", err)
+			return
+		}
+
+	}
+
 	json.NewEncoder(w).Encode("OK")
+}
+
+func (h *Handler) shouldUploadFile() bool {
+	return time.Since(h.lastUploadTime) >= FileUploadFrequency
 }

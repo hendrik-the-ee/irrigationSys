@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 
+	"cloud.google.com/go/storage"
 	"github.com/gorilla/mux"
+	"github.com/hendrik-the-ee/irrigationSys/clients"
 	"github.com/hendrik-the-ee/irrigationSys/datamanager"
 	"github.com/hendrik-the-ee/irrigationSys/handlers"
 	"github.com/hendrik-the-ee/irrigationSys/hydrolog"
@@ -13,7 +16,8 @@ import (
 )
 
 type Config struct {
-	Filepath string `envconfig:"FILE_STORAGE_PATH" required:"true"`
+	Filepath   string `envconfig:"FILE_STORAGE_PATH" required:"true"`
+	BucketName string `envconfig:"BUCKET_NAME" required:"true"`
 }
 
 func main() {
@@ -22,11 +26,20 @@ func main() {
 		log.Fatalf("error creating hydrolog: %v", err)
 	}
 
+	ctx := context.Background()
+
 	var config Config
 	err = envconfig.Process("collector", &config)
 
 	dm := datamanager.New(config.Filepath)
-	h := handlers.New(dm, hlog)
+	gcp, err := storage.NewClient(ctx)
+	if err != nil {
+		hlog.Fatal("couldn't create google storage client")
+	}
+
+	gcs := clients.NewCloudStorage(config.BucketName, gcp)
+
+	h := handlers.New(dm, gcs, hlog, config.Filepath)
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/data", h.CollectData).Methods("POST")

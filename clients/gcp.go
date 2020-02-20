@@ -2,6 +2,7 @@ package clients
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 
@@ -29,7 +30,8 @@ func (gcp *CloudStorage) UploadToStorage(filename string, ctx context.Context) e
 
 	bh := gcp.client.Bucket(gcp.bucketName)
 	// Check if the bucket exists
-	if _, err = bh.Attrs(ctx); err != nil {
+	if attrs, err := bh.Attrs(ctx); err != nil {
+		fmt.Printf("BUCKET %s ATTRS: %v, ERROR: %v", gcp.bucketName, attrs, err)
 		return err
 	}
 
