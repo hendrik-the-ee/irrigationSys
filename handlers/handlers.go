@@ -13,7 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const FileUploadFrequency = 30 * time.Second
+const FileUploadFrequency = 12 * time.Hour
 
 type Handler struct {
 	dm             *datamanager.Client
