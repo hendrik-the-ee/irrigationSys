@@ -26,6 +26,6 @@ jobs:
 
     - name: Build collector
       run: go build -o collector cmd/collector/main.go
-      
+
     - name: Build sender
       run: go build -o sender cmd/sender/main.go

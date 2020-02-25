@@ -1,23 +1,23 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"log"
 	"net/http"
-	"os"
-	"os/exec"
 
+	"cloud.google.com/go/storage"
 	"github.com/gorilla/mux"
-	"github.com/hendrik-the-ee/irrigationSys/datastorage"
+	"github.com/hendrik-the-ee/irrigationSys/clients"
+	"github.com/hendrik-the-ee/irrigationSys/datamanager"
 	"github.com/hendrik-the-ee/irrigationSys/handlers"
 	"github.com/hendrik-the-ee/irrigationSys/hydrolog"
-	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/kelseyhightower/envconfig"
 )
 
 type Config struct {
-	DBPath string `envconfig:"COLLECTOR_DB_PATH" required:"true"`
+	Filepath   string `envconfig:"FILE_STORAGE_PATH" required:"true"`
+	BucketName string `envconfig:"BUCKET_NAME" required:"true"`
 }
 
 func main() {
@@ -26,41 +26,20 @@ func main() {
 		log.Fatalf("error creating hydrolog: %v", err)
 	}
 
+	ctx := context.Background()
+
 	var config Config
 	err = envconfig.Process("collector", &config)
 
-	if shouldCreateDB(config.DBPath) {
-		cmd := exec.Command("sqlite3", config.DBPath)
-		stdout, err := cmd.Output()
-		hlog.Info(string(stdout))
-		if err != nil {
-			hlog.Fatalf("error creating databse: %v", err)
-		}
-	}
-
-	sqlite, err := sql.Open("sqlite3", config.DBPath)
+	dm := datamanager.New(config.Filepath)
+	gcp, err := storage.NewClient(ctx)
 	if err != nil {
-		hlog.Fatalf("error opening db: %v", err)
-	}
-	defer sqlite.Close()
-
-	createTable := `CREATE TABLE
-                        IF NOT EXISTS sensor_data (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                         sensor_id INTEGER,
-                         sensor_type TEXT,
-                         temp REAL,
-                         moist REAL,
-                         volts_in REAL,
-                         created_at TEXT,
-                         can_delete INTEGER)`
-	statement, err := sqlite.Prepare(createTable)
-	_, err = statement.Exec()
-	if err != nil {
-		hlog.Fatalf("error creating table: %v", err)
+		hlog.Fatal("couldn't create google storage client")
 	}
 
-	ds := datastorage.New(sqlite)
-	h := handlers.New(ds, hlog)
+	gcs := clients.NewCloudStorage(config.BucketName, gcp)
+
+	h := handlers.New(dm, gcs, hlog, config.Filepath)
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/data", h.CollectData).Methods("POST")
@@ -68,9 +47,4 @@ func main() {
 
 	hlog.Info("Listening on port :8080")
 	hlog.Fatal(http.ListenAndServe(":8080", router))
-}
-
-func shouldCreateDB(name string) bool {
-	_, err := os.Stat(name)
-	return os.IsNotExist(err)
 }

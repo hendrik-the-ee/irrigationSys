@@ -6,12 +6,10 @@ import (
 )
 
 const (
-	Layout        = "2006-01-02 15:04:05"
-	DefaultDBName = "./hydrobot.db"
+	Layout = "2006-01-02 15:04:05"
 )
 
 type SensorData struct {
-	ID           int32
 	SensorID     int32     `json:"sensor_id"`
 	SensorType   string    `json:"sensor_type"`
 	SoilTemp     float32   `json:"temp"`
