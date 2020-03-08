@@ -11,13 +11,15 @@ import (
 	"github.com/hendrik-the-ee/irrigationSys/datamanager"
 	"github.com/hendrik-the-ee/irrigationSys/handlers"
 	"github.com/hendrik-the-ee/irrigationSys/hydrolog"
+	"google.golang.org/api/option"
 
 	"github.com/kelseyhightower/envconfig"
 )
 
 type Config struct {
-	Filepath   string `envconfig:"FILE_STORAGE_PATH" required:"true"`
-	BucketName string `envconfig:"BUCKET_NAME" required:"true"`
+	Filepath    string `envconfig:"FILE_STORAGE_PATH" required:"true"`
+	BucketName  string `envconfig:"BUCKET_NAME" required:"true"`
+	GoogleCreds string `envconfig:"GOOGLE_APPLICATION_CREDENTIALS" required:"true"`
 }
 
 func main() {
@@ -32,11 +34,11 @@ func main() {
 	err = envconfig.Process("collector", &config)
 
 	dm := datamanager.New(config.Filepath)
-	gcp, err := storage.NewClient(ctx)
-	if err != nil {
-		hlog.Fatal("couldn't create google storage client")
-	}
 
+	gcp, err := storage.NewClient(ctx, option.WithCredentialsFile(config.GoogleCreds))
+	if err != nil {
+		hlog.Fatalf("couldn't create google storage client: %v", err)
+	}
 	gcs := clients.NewCloudStorage(config.BucketName, gcp)
 
 	h := handlers.New(dm, gcs, hlog, config.Filepath)

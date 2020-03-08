@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"cloud.google.com/go/storage"
+	"github.com/hendrik-the-ee/irrigationSys/models"
 )
 
 type CloudStorage struct {
@@ -29,13 +31,14 @@ func (gcp *CloudStorage) UploadToStorage(filename string, ctx context.Context) e
 	defer f.Close()
 
 	bh := gcp.client.Bucket(gcp.bucketName)
-	// Check if the bucket exists
-	if attrs, err := bh.Attrs(ctx); err != nil {
-		fmt.Printf("BUCKET %s ATTRS: %v, ERROR: %v", gcp.bucketName, attrs, err)
+	if _, err := bh.Attrs(ctx); err != nil {
 		return err
 	}
 
-	obj := bh.Object(filename)
+	now := time.Now().Format(models.Layout)
+	gcpFilename := fmt.Sprintf("%s.csv", now)
+
+	obj := bh.Object(gcpFilename)
 	w := obj.NewWriter(ctx)
 
 	if _, err := io.Copy(w, f); err != nil {
