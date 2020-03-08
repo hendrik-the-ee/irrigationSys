@@ -75,6 +75,10 @@ func (h *Handler) CollectData(w http.ResponseWriter, r *http.Request) {
 	log.WithFields(fields).Info("data received")
 
 	if err := h.dm.AppendToFile(&sd); err != nil {
+		fields := logrus.Fields{
+			"filepath":         h.filepath,
+			"last_upload_time": h.lastUploadTime,
+		}
 		log.WithFields(fields).Errorf("error saving data: %v", err)
 		// TODO: create a passive nagios check to alert on this failing
 		return
@@ -84,7 +88,7 @@ func (h *Handler) CollectData(w http.ResponseWriter, r *http.Request) {
 
 	if h.shouldUploadFile() {
 		fields := logrus.Fields{
-			"filepath":         h.filepath,
+			"src_filepath":     h.filepath,
 			"last_upload_time": h.lastUploadTime,
 		}
 		if err := h.gcs.UploadToStorage(h.filepath, ctx); err != nil {
