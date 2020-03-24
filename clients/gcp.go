@@ -11,6 +11,10 @@ import (
 	"github.com/hendrik-the-ee/irrigationSys/models"
 )
 
+type Storage interface {
+	UploadToStorage(string, context.Context) error
+}
+
 type CloudStorage struct {
 	bucketName string
 	client     *storage.Client

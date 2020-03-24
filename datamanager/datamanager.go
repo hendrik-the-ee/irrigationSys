@@ -14,25 +14,23 @@ import (
 var mode = os.FileMode(0700)
 
 type Client struct {
-	filepath string
-	mu       *sync.Mutex
+	mu *sync.Mutex
 }
 
-func New(filepath string) *Client {
+func New() *Client {
 	return &Client{
-		filepath: filepath,
-		mu:       &sync.Mutex{},
+		mu: &sync.Mutex{},
 	}
 }
 
-func (c *Client) AppendToFile(sd *models.SensorData) error {
+func (c *Client) AppendToFile(sd *models.SensorData, filepath string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	var rows [][]string
 
-	if _, err := os.Stat(c.filepath); os.IsNotExist(err) {
-		_, err := os.Create(c.filepath)
+	if _, err := os.Stat(filepath); os.IsNotExist(err) {
+		_, err := os.Create(filepath)
 		if err != nil {
 			return err
 		}
@@ -41,7 +39,7 @@ func (c *Client) AppendToFile(sd *models.SensorData) error {
 
 	rows = append(rows, sd.ToCSVRecord())
 
-	f, err := os.OpenFile(c.filepath, os.O_WRONLY|os.O_APPEND, mode)
+	f, err := os.OpenFile(filepath, os.O_WRONLY|os.O_APPEND, mode)
 	if err != nil {
 		return err
 	}

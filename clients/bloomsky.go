@@ -25,6 +25,10 @@ func NewBloomsky(url, key string) *Bloomsky {
 	}
 }
 
+type WeatherData interface {
+	GetData() (BloomskyData, error)
+}
+
 type BloomskyData struct {
 	DeviceID   string  `json:"DeviceID"`
 	DeviceName string  `json:"DeviceName"`

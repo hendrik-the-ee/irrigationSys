@@ -13,22 +13,26 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const FileUploadFrequency = 12 * time.Hour
+const (
+	FileUploadFrequency = 12 * time.Hour
+	SensorDataFilepath  = "sensor_data.csv"
+	WeatherDataFilepath = "weather_data.csv"
+)
 
 type Handler struct {
 	dm             *datamanager.Client
 	gcs            *clients.CloudStorage
-	filepath       string
+	bc             *clients.Bloomsky
 	log            *logrus.Entry
 	lastUploadTime time.Time
 }
 
-func New(dm *datamanager.Client, gcs *clients.CloudStorage, log *logrus.Entry, fp string) *Handler {
+func New(dm *datamanager.Client, gcs *clients.CloudStorage, bc *clients.Bloomsky, log *logrus.Entry) *Handler {
 	return &Handler{
 		dm:             dm,
 		gcs:            gcs,
+		bc:             bc,
 		log:            log,
-		filepath:       fp,
 		lastUploadTime: time.Now().UTC(),
 	}
 }
@@ -74,9 +78,9 @@ func (h *Handler) CollectData(w http.ResponseWriter, r *http.Request) {
 
 	log.WithFields(fields).Info("data received")
 
-	if err := h.dm.AppendToFile(&sd); err != nil {
+	if err := h.dm.AppendToFile(&sd, SensorDataFilepath); err != nil {
 		fields := logrus.Fields{
-			"filepath":         h.filepath,
+			"filepath":         SensorDataFilepath,
 			"last_upload_time": h.lastUploadTime,
 		}
 		log.WithFields(fields).Errorf("error saving data: %v", err)
@@ -87,21 +91,24 @@ func (h *Handler) CollectData(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	if h.shouldUploadFile() {
+		// add in uploading weather data file
+
 		fields := logrus.Fields{
-			"src_filepath":     h.filepath,
+			"src_filepath":     SensorDataFilepath,
 			"last_upload_time": h.lastUploadTime,
 		}
-		if err := h.gcs.UploadToStorage(h.filepath, ctx); err != nil {
+
+		if err := h.gcs.UploadToStorage(SensorDataFilepath, ctx); err != nil {
 			log.WithFields(fields).Errorf("error uploading data: %v", err)
 			return
 		}
 
-		h.lastUploadTime = time.Now().UTC()
-
-		if err := h.dm.ArchiveFile(h.filepath); err != nil {
+		if err := h.dm.ArchiveFile(SensorDataFilepath); err != nil {
 			log.WithFields(fields).Errorf("error resetting file: %v", err)
 			return
 		}
+
+		h.lastUploadTime = time.Now().UTC()
 
 	}
 
