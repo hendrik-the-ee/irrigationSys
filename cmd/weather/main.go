@@ -17,7 +17,10 @@ import (
 )
 
 type Config struct {
+	BucketName  string `envconfig:"BUCKET_NAME" required:"true"`
 	GoogleCreds string `envconfig:"GOOGLE_APPLICATION_CREDENTIALS" required:"true"`
+	BloomskyURL string `envconfig:"BLOOMSKY_URL" default:""`
+	BloomskyKey string `envconfig:"BLOOMSKY_KEY" required:"true"`
 }
 
 func main() {
@@ -37,14 +40,16 @@ func main() {
 	if err != nil {
 		hlog.Fatalf("couldn't create google storage client: %v", err)
 	}
-	gcs := clients.NewCloudStorage(SensorDataBucketName, gcp)
+	gcs := clients.NewCloudStorage(WeatherDataBucketName, gcp)
 
-	h := handlers.NewSensorCollector(dm, gcs, hlog)
+	bc := clients.NewBloomsky(config.BloomskyURL, config.BloomskyKey)
+
+	h := handlers.New(dm, gcs, bc, hlog)
 
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/data", h.CollectData).Methods("POST")
+	router.HandleFunc("/data", h.GetAndStoreData).Methods("GET")
 	router.HandleFunc("/ping", h.Ping).Methods("GET")
 
-	hlog.Info("Listening on port :8080")
-	hlog.Fatal(http.ListenAndServe(":8080", router))
+	hlog.Info("Listening on port :8060")
+	hlog.Fatal(http.ListenAndServe(":8060", router))
 }

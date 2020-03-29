@@ -39,14 +39,16 @@ type BloomskyData struct {
 }
 
 type Detail struct {
+	TS          int64   `json:"TS"`
 	Temperature float64 `json:"Temperature"`
 	Humidity    int     `json:"Humidity"`
+	Rain        bool    `json:"Rain"`
+	Pressure    float64 `json:"Pressure"`
+	Voltage     int     `json:"Voltage"`
+	UVIndex     int     `json:"UVIndex"`
+
 	// intensity of ilght emitted from surface per unit area in a given direction
-	Luminance int     `json:"Luminance"`
-	Rain      bool    `json:"Rain"`
-	Pressure  float64 `json:"Pressure"`
-	Voltage   int     `json:"Voltage"`
-	UVIndex   int     `json:"UVIndex"`
+	Luminance int `json:"Luminance"`
 }
 
 func (b *Bloomsky) GetData() (BloomskyData, error) {
@@ -68,6 +70,8 @@ func (b *Bloomsky) GetData() (BloomskyData, error) {
 	if err != nil {
 		return data, err
 	}
+
+	fmt.Printf("%s", string(body))
 
 	var tmpData []BloomskyData
 	if err := json.Unmarshal(body, &tmpData); err != nil {

@@ -14,20 +14,19 @@ import (
 )
 
 const (
-	FileUploadFrequency = 12 * time.Hour
-	SensorDataFilepath  = "sensor_data.csv"
-	WeatherDataFilepath = "weather_data.csv"
+	FileUploadFrequency  = 12 * time.Hour
+	SensorDataFilepath   = "sensor_data.csv"
+	SensorDataBucketName = "hydrobot-sensor-data"
 )
 
 type Handler struct {
 	dm             *datamanager.Client
 	gcs            *clients.CloudStorage
-	bc             *clients.Bloomsky
 	log            *logrus.Entry
 	lastUploadTime time.Time
 }
 
-func New(dm *datamanager.Client, gcs *clients.CloudStorage, bc *clients.Bloomsky, log *logrus.Entry) *Handler {
+func New(dm *datamanager.Client, gcs *clients.CloudStorage, log *logrus.Entry) *Handler {
 	return &Handler{
 		dm:             dm,
 		gcs:            gcs,
@@ -91,8 +90,6 @@ func (h *Handler) CollectData(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	if h.shouldUploadFile() {
-		// add in uploading weather data file
-
 		fields := logrus.Fields{
 			"src_filepath":     SensorDataFilepath,
 			"last_upload_time": h.lastUploadTime,
