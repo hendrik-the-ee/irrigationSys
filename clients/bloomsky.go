@@ -25,6 +25,8 @@ func NewBloomsky(url, key string) *Bloomsky {
 	}
 }
 
+// BloomskyData represents the data returned by the Bloomsky device API:
+// http://weatherlution.com/bloomsky-api/
 type BloomskyData struct {
 	DeviceID   string  `json:"DeviceID"`
 	DeviceName string  `json:"DeviceName"`
@@ -35,6 +37,8 @@ type BloomskyData struct {
 	Details    Detail  `json:"Data"`
 }
 
+// Detail represents the data returned by the Bloomsky device API:
+// http://weatherlution.com/bloomsky-api/
 type Detail struct {
 	Temperature float64 `json:"Temperature"`
 	Humidity    int     `json:"Humidity"`
