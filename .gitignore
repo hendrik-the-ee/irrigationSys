@@ -1,3 +1,4 @@
+weather
 collector
 *.csv
 *.json
@@ -5,3 +6,4 @@ collector
 app-env
 *~
 *.log
+run_weather.sh

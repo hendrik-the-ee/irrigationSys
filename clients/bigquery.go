@@ -21,7 +21,7 @@ func NewBigquery(pid, did, tid string) *Bigquery {
 	}
 }
 
-func (b *Bigquery) InsertRows(ctx context.Context, rows []bigquery.ValueSaver) error {
+func (b *Bigquery) InsertRows(ctx context.Context, row bigquery.ValueSaver) error {
 	client, err := bigquery.NewClient(ctx, b.ProjectID)
 	if err != nil {
 		return fmt.Errorf("bigquery.NewClient: %v", err)
@@ -30,7 +30,7 @@ func (b *Bigquery) InsertRows(ctx context.Context, rows []bigquery.ValueSaver) e
 	defer client.Close()
 
 	inserter := client.Dataset(b.DatasetID).Table(b.TableID).Inserter()
-	if err := inserter.Put(ctx, rows); err != nil {
+	if err := inserter.Put(ctx, row); err != nil {
 		return err
 	}
 	return nil

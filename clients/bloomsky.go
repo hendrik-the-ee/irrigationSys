@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/hendrik-the-ee/irrigationSys/models"
 )
 
 type WeatherData interface {
-	GetData() (BloomskyData, error)
+	GetData() (models.BloomskyData, error)
 }
 
 type Bloomsky struct {
@@ -25,33 +27,8 @@ func NewBloomsky(url, key string) *Bloomsky {
 	}
 }
 
-// BloomskyData represents the data returned by the Bloomsky device API:
-// http://weatherlution.com/bloomsky-api/
-type BloomskyData struct {
-	DeviceID   string  `json:"DeviceID"`
-	DeviceName string  `json:"DeviceName"`
-	Lat        float64 `json:"LAT"`
-	Lon        float64 `json:"LON"`
-	Alt        float64 `json:"ALT"` // elevation in meters
-	TS         int64   `json:"TS"`
-	Details    Detail  `json:"Data"`
-}
-
-// Detail represents the data returned by the Bloomsky device API:
-// http://weatherlution.com/bloomsky-api/
-type Detail struct {
-	Temperature float64 `json:"Temperature"`
-	Humidity    int     `json:"Humidity"`
-	// intensity of ilght emitted from surface per unit area in a given direction
-	Luminance int     `json:"Luminance"`
-	Rain      bool    `json:"Rain"`
-	Pressure  float64 `json:"Pressure"`
-	Voltage   int     `json:"Voltage"`
-	UVIndex   int     `json:"UVIndex"`
-}
-
-func (b *Bloomsky) GetData() (BloomskyData, error) {
-	var data BloomskyData
+func (b *Bloomsky) GetData() (models.BloomskyData, error) {
+	var data models.BloomskyData
 
 	req, err := http.NewRequest("GET", b.url, nil)
 	if err != nil {
@@ -70,7 +47,7 @@ func (b *Bloomsky) GetData() (BloomskyData, error) {
 		return data, err
 	}
 
-	var tmpData []BloomskyData
+	var tmpData []models.BloomskyData
 	if err := json.Unmarshal(body, &tmpData); err != nil {
 		return data, err
 	}

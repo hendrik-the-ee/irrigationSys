@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"time"
 
 	"cloud.google.com/go/bigquery"
 )
@@ -27,15 +28,12 @@ type BloomskyData struct {
 	Details    Detail  `json:"Data"`
 }
 
-func (b BloomskyData) IsValid() bool {
-	// TODO: Implement checks on data
-	return true
-}
-
 // Save implements the bigquery ValueSaver interface
 // https://godoc.org/cloud.google.com/go/bigquery#ValueSaver
 func (b *BloomskyData) Save() (map[string]bigquery.Value, string, error) {
+	datetime := time.Unix(b.Details.TS, 0)
 	row := map[string]bigquery.Value{
+		"datetime":    datetime,
 		"device_id":   b.DeviceID,
 		"device_name": b.DeviceName,
 		"lat":         b.Lat,
