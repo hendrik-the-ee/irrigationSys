@@ -40,13 +40,6 @@ func main() {
 
 	h := handlers.NewWeather(hlog, bc, bq)
 
-	// router := mux.NewRouter().StrictSlash(true)
-	// router.HandleFunc("/data/weather", h.StoreWeatherData).Methods("GET")
-	// router.HandleFunc("/ping", h.Ping).Methods("GET")
-
-	// hlog.Info("Listening on port :8060")
-	// hlog.Fatal(http.ListenAndServe(":8060", router))
-
 	run := func(ctx context.Context) {
 		timer := time.NewTimer(0)
 		for {
