@@ -31,6 +31,7 @@ type BloomskyData struct {
 	Lat        float64 `json:"LAT"`
 	Lon        float64 `json:"LON"`
 	Alt        float64 `json:"ALT"` // elevation in meters
+	TS         int64   `json:"TS"`
 	Details    Detail  `json:"Data"`
 }
 
