@@ -7,11 +7,14 @@ import (
 	"os"
 	"sync"
 	"time"
-
-	"github.com/hendrik-the-ee/irrigationSys/models"
 )
 
 var mode = os.FileMode(0700)
+
+type Record interface {
+	GetColumnHeaders() []string
+	ToCSVRecord() []string
+}
 
 type Client struct {
 	filepath string
@@ -25,7 +28,7 @@ func New(filepath string) *Client {
 	}
 }
 
-func (c *Client) AppendToFile(sd *models.SensorData) error {
+func (c *Client) AppendToFile(r Record) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -36,10 +39,10 @@ func (c *Client) AppendToFile(sd *models.SensorData) error {
 		if err != nil {
 			return err
 		}
-		rows = append(rows, models.GetColumnHeaders())
+		rows = append(rows, r.GetColumnHeaders())
 	}
 
-	rows = append(rows, sd.ToCSVRecord())
+	rows = append(rows, r.ToCSVRecord())
 
 	f, err := os.OpenFile(c.filepath, os.O_WRONLY|os.O_APPEND, mode)
 	if err != nil {
