@@ -18,7 +18,7 @@ type SensorData struct {
 	CreatedAt    time.Time `json:"created_at,omitempty"`
 }
 
-func GetColumnHeaders() []string {
+func (s *SensorData) GetColumnHeaders() []string {
 	return []string{
 		"SensorID",
 		"SensorType",
