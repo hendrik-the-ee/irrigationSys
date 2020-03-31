@@ -15,7 +15,7 @@ import (
 
 const FileUploadFrequency = 12 * time.Hour
 
-type Handler struct {
+type SensorData struct {
 	dm             *datamanager.Client
 	gcs            *clients.CloudStorage
 	filepath       string
@@ -23,8 +23,8 @@ type Handler struct {
 	lastUploadTime time.Time
 }
 
-func New(dm *datamanager.Client, gcs *clients.CloudStorage, log *logrus.Entry, fp string) *Handler {
-	return &Handler{
+func NewSensorData(dm *datamanager.Client, gcs *clients.CloudStorage, log *logrus.Entry, fp string) *SensorData {
+	return &SensorData{
 		dm:             dm,
 		gcs:            gcs,
 		log:            log,
@@ -33,12 +33,12 @@ func New(dm *datamanager.Client, gcs *clients.CloudStorage, log *logrus.Entry, f
 	}
 }
 
-func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
+func (h *SensorData) Ping(w http.ResponseWriter, r *http.Request) {
 	h.log.WithFields(logrus.Fields{"user_agent": r.Header["User-Agent"]}).Info("ping")
 	json.NewEncoder(w).Encode("OK")
 }
 
-func (h *Handler) CollectData(w http.ResponseWriter, r *http.Request) {
+func (h *SensorData) CollectData(w http.ResponseWriter, r *http.Request) {
 	log := h.log
 
 	b, err := ioutil.ReadAll(r.Body)
@@ -108,6 +108,6 @@ func (h *Handler) CollectData(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode("OK")
 }
 
-func (h *Handler) shouldUploadFile() bool {
+func (h *SensorData) shouldUploadFile() bool {
 	return time.Since(h.lastUploadTime) >= FileUploadFrequency
 }

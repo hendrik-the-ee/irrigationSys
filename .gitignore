@@ -1,8 +1,9 @@
+weather
 collector
-sender
 *.csv
 *.json
 *.db
 app-env
 *~
 *.log
+run_weather.sh
