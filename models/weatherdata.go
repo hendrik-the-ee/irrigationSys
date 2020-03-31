@@ -31,7 +31,7 @@ type BloomskyData struct {
 // Save implements the bigquery ValueSaver interface
 // https://godoc.org/cloud.google.com/go/bigquery#ValueSaver
 func (b *BloomskyData) Save() (map[string]bigquery.Value, string, error) {
-	datetime := time.Unix(b.Details.TS, 0)
+	datetime := time.Unix(b.Details.TS, 0).UTC()
 	row := map[string]bigquery.Value{
 		"datetime":    datetime,
 		"device_id":   b.DeviceID,
