@@ -41,7 +41,7 @@ func main() {
 	}
 	gcs := clients.NewCloudStorage(config.BucketName, gcp)
 
-	h := handlers.New(dm, gcs, hlog, config.Filepath)
+	h := handlers.NewSensorData(dm, gcs, hlog, config.Filepath)
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/data", h.CollectData).Methods("POST")
