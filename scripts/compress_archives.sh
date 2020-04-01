@@ -10,4 +10,10 @@ NOW=$(date +"%m-%d-%Y")
 NAME=archives_$NOW.tar
 
 tar -cvf $NAME $ARCHIVE_FILEPATH/archive.*.csv
-rm archive.*.csv
+
+if [ $? -eq 0 ]; then
+    echo "OK"
+    rm archive.*.csv
+else
+    echo "FAILED"
+fi
