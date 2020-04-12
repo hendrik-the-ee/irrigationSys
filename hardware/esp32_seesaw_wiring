@@ -1,0 +1,12 @@
+
+SIGNAL  ESP32   SEESAW  COLOR
+----------------
+3.3V    GP4     2       RED
+GND     GND     1       BLK
+SDA     GP21    3       YEL
+SCL     GP22    4       GRN
+
+
+ESP32: 
+ADC pin 33 for voltage.  resistor divider 100k top, 10k bot.  0.1uF cap to GND,m.
+GPIO pin 4 powers the soil moisture sensor
