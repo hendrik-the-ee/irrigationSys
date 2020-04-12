@@ -31,3 +31,7 @@ run_weather.sh
 /.node_modules.ember-try/
 /bower.json.ember-try
 /package.json.ember-try
+node_modules
+.editorconfig
+.ember-cli
+ember-cli-build.js
