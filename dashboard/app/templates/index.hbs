@@ -1,0 +1,13 @@
+<Jumbo>
+  <h2>Welcome!</h2>
+  <p>Here is some random text.</p>
+  <LinkTo @route="reports" class="button">Reports</LinkTo>
+</Jumbo>
+
+<div class="rentals">
+  <ul class="results">
+      {{#each @model as |summary|}}
+      	      <li><Sensor @sensor={{summary}} /></li>
+      {{/each}}
+  </ul>
+</div>

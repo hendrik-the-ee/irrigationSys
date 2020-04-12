@@ -1,0 +1,35 @@
+<Jumbo>
+  <h2>{{@sensor.title}}</h2>
+</Jumbo>
+
+<article class="sensor detailed">
+<div class="details">
+    <h3>About {{@sensor.title}}</h3>
+
+    <div class="detail owner">
+      <span>Owner:</span> {{@sensor.owner}}
+    </div>
+    <div class="detail type">
+      <span>Type:</span> {{@sensor.type}} – {{@sensor.category}}
+    </div>
+    <div class="detail location">
+      <span>Location:</span> {{@sensor.city}}
+    </div>
+    <div class="detail bedrooms">
+      <span>Number of bedrooms:</span> {{@sensor.bedrooms}}
+    </div>
+    <div class="detail description">
+      <p>{{@sensor.description}}</p>
+    </div>
+  </div>
+
+<Map
+    @lat={{@sensor.location.lat}}
+    @lng={{@sensor.location.lng}}
+    @zoom="12"
+    @width="894"
+    @height="600"
+    alt="A map of {{@sensor.title}}"
+    class="large"
+  />
+</article>

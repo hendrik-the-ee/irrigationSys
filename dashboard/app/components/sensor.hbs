@@ -1,0 +1,29 @@
+<article class="rental">
+  <div class="details">
+  <h3>
+      <LinkTo @route="sensor" @model={{@sensor}}>
+        {{@sensor.title}}
+      </LinkTo>
+    </h3>
+    <div class="detail owner">
+      <span>Owner:</span> {{@sensor.owner}}
+    </div>
+    <div class="detail type">
+      <span>Type:</span> {{@sensor.type}}
+    </div>
+    <div class="detail location">
+      <span>Location:</span> {{@sensor.city}}
+    </div>
+    <div class="detail bedrooms">
+      <span>Number of bedrooms:</span> {{@sensor.bedrooms}}
+    </div>
+  </div>
+  <Map
+    @lat={{@sensor.location.lat}}
+    @lng={{@sensor.location.lng}}
+    @zoom="9"
+    @width="150"
+    @height="150"
+    alt="A map of {{@sensor.title}}"
+  />
+</article>
