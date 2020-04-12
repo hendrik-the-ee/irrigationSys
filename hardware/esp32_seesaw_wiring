@@ -8,5 +8,5 @@ SCL     GP22    4       GRN
 
 
 ESP32: 
-ADC pin 33 for voltage.  resistor divider 10k top, 10k bot.
-GPIO pin 4 powers the 
+ADC pin 33 for voltage.  resistor divider 100k top, 10k bot.  0.1uF cap to GND,m.
+GPIO pin 4 powers the soil moisture sensor

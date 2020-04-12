@@ -19,7 +19,7 @@
 #include <HTTPClient.h>
 
 // definitions
-#define espID 3              // unique ID for every device
+//#define espID 3              // unique ID for every device
 #define sensorID 1           // unique ID for every sensor type
 #define pinLed 5             // GPIO pin
 #define seesawPwrPin 4       // GPIO pin provides switchable power for the seesaw to extend battery life
@@ -27,12 +27,27 @@
 #define ESPID_EEPROM_ADDR 0  // address in EEPROM for ESP32 ID
 #define EEPROM_SIZE 1
 #define uS_TO_S_FACTOR 1000000        //Conversion factor for micro seconds to seconds
+#define StringMaxBytes        // max number of bytes to reserve for String
 
 // global variables
 uint16_t timeNow = millis();
 const int timeToSleep = 5;   // seconds
 const int adcLoopCountMax = 5;
 const int wifiRetryCountMax = 10;
+String inString;             // device serial number.  if 0, this prompt user for input
+//inString.reserve(20);        // reserve max of 20 bytes for inString
+uint16_t espID = 0;
+uint16_t espLocID = 0;        /* device location ID: 
+          0: unknown (prompt user for input)
+          1: raisedBedNE
+          2: raisedBedSW
+          3: dirtPile
+          4: strawberry
+          5: wildflower
+          6: yucca
+          7: landShed
+          8: landSistern
+          9: landGate       */
 Adafruit_seesaw ss;   // soil sensor
 RTC_DATA_ATTR int bootCount = 0;
 bool seeSawExists = 0;
@@ -102,15 +117,35 @@ void setup() {
 
   digitalWrite(seesawPwrPin, HIGH);   // turn on the seesaw
   delay(50);
-  Serial.begin(115200);  
-/*  if (espID == NULL) {
-    Serial.println("Enter ESPID (value from 0 to 255): ");
-    espID = Serial.read();
+  Serial.begin(115200);
+
+
+  bool endOfInput=false;
+  if (espID == 0) {
+    Serial.println("Enter ESPID (value from 1 to 65535): ");
+    while (endOfInput==0)
+    {
+      while (Serial.available()>0)
+      {
+        int inChar = Serial.read();
+        if (isDigit(inChar)) 
+        {
+          // convert the incoming byte to a char and add it to the string:
+          inString += (char)inChar;
+        } // isDigit
+        // if you get a newline, print the string, then the string's value:
+        if (inChar == '\n') 
+        {
+          endOfInput=true;
+        } // inChar==newline
+      } // while Serial.available)
+    } // while(endofintput)
+    espID = inString.toInt();
     EEPROM.write(ESPID_EEPROM_ADDR, espID);
-  }else{
-    Serial.println("ESPID=" + String(espID));
+    }else{
+      Serial.println("ESPID=" + String(espID));
   }     // IF (espID)
-*/
+
   esp_sleep_enable_timer_wakeup(timeToSleep * uS_TO_S_FACTOR);
   Serial.print("esp_sleep_enable_timer_wakeup: time=");  Serial.println(timeToSleep);
   seeSawExists = seeSawSetup();
