@@ -6,6 +6,7 @@ module.exports = function(environment) {
     environment,
     rootURL: '/',
     locationType: 'auto',
+    mapboxtoken: null,
     EmberENV: {
       FEATURES: {
         // Here you can enable experimental features on an ember canary build
@@ -46,6 +47,15 @@ module.exports = function(environment) {
   if (environment === 'production') {
     // here you can enable a production-specific feature
   }
+
+  try {
+  var local = require('./local_env');
+  Object.keys(local.config).forEach(function(key) {
+    ENV[key] = local.config[key];
+  });
+} catch(err) {
+  console.log("config/local_env.js not found");
+}
 
   return ENV;
 };

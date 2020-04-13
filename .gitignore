@@ -15,9 +15,11 @@ run_weather.sh
 # dependencies
 /bower_components/
 /node_modules/
+dist
 
 # misc
 /.env*
+local_env.js
 /.pnp*
 /.sass-cache
 /connect.lock

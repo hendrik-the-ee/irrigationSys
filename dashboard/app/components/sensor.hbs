@@ -1,0 +1,22 @@
+<article class="sensor">
+<div class="details">
+<h3>{{@sensor.name}}</h3>
+<div class="detail controller">
+      <span>Controller:</span> {{@sensor.controller}}
+</div>
+<div class="detail type">
+      <span>Type:</span> {{@sensor.type}}
+</div>
+<div class="detail lastSentData">
+      <span>Last Sent Data:</span> {{@sensor.last_sent_data}}
+</div>
+</div>
+<Map
+    @lat={{@sensor.location.lat}}
+    @lng={{@sensor.location.lng}}
+    @zoom="9"
+    @width="150"
+    @height="150"
+    alt="A map of {{@sensor.name}}"
+/>
+</article>
