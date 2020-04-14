@@ -1,0 +1,16 @@
+{
+  "data": {
+    "type": "sensors",
+      "id": "sensor-1",
+      "attributes": {
+        "name": "Test",
+        "controller": "Pi1",
+        "location": {
+          "lat": 37.7749,
+          "lng": -122.4194
+        },
+        "category": "Moisture",
+        "last_sent_data": '2020-04-01 08:15:27',
+    }
+  }
+}

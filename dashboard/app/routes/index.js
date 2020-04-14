@@ -1,16 +1,20 @@
 import Route from '@ember/routing/route';
+import { inject as service } from '@ember/service';
 
 export default class IndexRoute extends Route {
-  async model() {
-    return {
-      name: 'Sensor 1',
-      controller: 'Pi 1',
-      location: {
-        lat: 37.7749,
-        lng: -122.4194,
-      },
-	type: 'Moisture',
-	last_sent_data: '2020-04-04 08:15:27',
-    };
-  }
+    // async model() {
+    // 	let response = await fetch('/api/sensors.json');
+    // 	let { data } = await response.json();
+    // 	console.log(data)
+    // 	return data.map(model => {
+    // 	    let { id, attributes } = model;
+
+    // 	    return { id, ...attributes };
+    // 	});
+    // }
+    @service store;
+
+    async model() {
+	return this.store.findAll('sensor');
+    }
 }
