@@ -8,5 +8,5 @@ export default class Router extends EmberRouter {
 
 Router.map(function() {
     this.route('reports');
-    this.route('sensor', { path: '/sensors/:sensor_id' });
+    this.route('device', { path: '/devices/:device_id' });
 });

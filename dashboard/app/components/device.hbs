@@ -1,0 +1,16 @@
+<article class="device">
+     <h3>
+      <LinkTo @route="device" @model={{@device}}>
+        {{@device.name}}
+      </LinkTo>
+    </h3>
+<Summary @device={{@device}} />
+<Map
+    @lat={{@device.location.lat}}
+    @lng={{@device.location.lng}}
+    @zoom="9"
+    @width="150"
+    @height="150"
+    alt="A map of {{@device.name}}"
+/>
+</article>

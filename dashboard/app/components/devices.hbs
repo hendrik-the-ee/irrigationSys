@@ -1,0 +1,14 @@
+<div class="devices">
+  <label>
+    <span>Filter devices by name:</span>
+    <Input @value={{this.query}} class="light" />
+  </label>
+
+  <ul class="results">
+      <Devices::Filter @devices={{@devices}} @query={{this.query}} as |results|>
+       {{#each results as |device|}}
+       <li><Device @device={{device}} /></li>
+       {{/each}}
+    </Devices::Filter>
+  </ul>
+</div>
