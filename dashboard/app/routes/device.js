@@ -3,9 +3,9 @@ import { inject as service } from '@ember/service';
 
 export default class DeviceRoute extends Route {
     async model(params) {
-	let response = await fetch(`/api/sensors/${params.sensor_id}.json`);
+	let response = await fetch(`/api/devices/${params.device_id}.json`);
 	let { data } = await response.json();
-
+	console.log(data)
 	let { id, attributes } = data;
 
 	return { id, ...attributes };
