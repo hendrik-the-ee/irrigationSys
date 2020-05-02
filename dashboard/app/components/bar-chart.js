@@ -10,14 +10,19 @@ export default class BarChartComponent extends Component {
     // did insert element() where we get svg from "this"
     // and then append some attributes to it
     //
-    testDataVolts = [
-	{name: 'sensor-1', volts: 3.75},
-	{name: 'sensor-2', volts: 3.55},
-	{name: 'sensor-3', volts: 2.05},
-    ];
+    // testDataVolts = [
+    // 	{name: 'sensor-1', volts: 3.75},
+    // 	{name: 'sensor-2', volts: 3.55},
+    // 	{name: 'sensor-3', volts: 2.05},
+    // ];
 
     constructor() {
 	super(...arguments);
+    }
+
+    get chartName() {
+	let { name } = this.args;
+	return name;
     }
 
     @action
@@ -26,32 +31,40 @@ export default class BarChartComponent extends Component {
     }
 
     createBarChartContainer() {
-	// Clear the DOM
-        document.getElementById('bar-chart').innerHTML = '';
+	let { chartData } = this.args;
+	let sensorVolts = chartData.map(data => data.volts)
 
-	let sensorVolts = this.testDataVolts.map(data => data.volts)
 	let yScale = scaleLinear()
 	    .domain([ 0, Math.max(...sensorVolts) ])
 	    .range( [ 0, 100 ]);
 
 	let xScale = scaleBand()
-	    .domain(this.testDataVolts.map(data => data.name))
+	    .domain(chartData.map(data => data.datetime))
 	    .range([ 0, 100 ])
             .paddingInner(0.12);
 
-	let barChartContainer = select('#bar-chart').append('svg');
+	let barChartContainers = d3.selectAll('svg');
 
-	this.barChartContainer = barChartContainer;
+	this.barChartContainers = barChartContainers;
 
-	let barChart = barChartContainer
-	    .selectAll('rect')
-	    .data(this.testDataVolts)
+	let barChart = this.barChartContainers.selectAll('rect').data(chartData)
 	    .enter()
 	    .append('rect')
 	    .attr('width', `${xScale.bandwidth()}%`)
-	    .attr('height', sensor => `${yScale(sensor.volts)}%`)
-	    .attr('x', data => `${xScale(data.name)}%`)
-	    .attr('y', data => `${100 - yScale(data.volts)}%`);
+	    .attr('height', data => `${yScale(data.volts)}%`)
+	    .attr('x', data => `${xScale(data.datetime)}%`)
+	    .attr('y', data => `${100 - yScale(data.volts)}%`)
+	    .attr('fill', 'blue');
+
+	barChart.append('svg:title').text(d => d.datetime);
+
+	barChart.on('mouseover', data => {
+	            select(event.currentTarget).style('fill', "green");
+	    })
+	    .on('mouseout', () => {
+		select(event.currentTarget)
+		    .style('fill', 'blue');
+	    });
 
 	this.barChart = barChart;
     }

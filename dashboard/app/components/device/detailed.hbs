@@ -6,7 +6,8 @@
   <h3> Summary </h3>
   <Summary @device={{@device}} />
   <h3> Most Recent Report Data </h3>
-  <p> This is the device template coming soon </p>
+  <BarChart @chartData={{@device.volts}} @name="chart 1"/>
+  <BarChart @chartData={{@device.volts}} @name="chart 2"/>
   <h3> Location </h3>
   <Map
     @lat={{@device.location.lat}}

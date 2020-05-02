@@ -179,6 +179,11 @@ p {
   padding: 10px 15px;
 }
 
+.chart-label h4 {
+    color: blue;
+    align-test: center;
+}
+
 .menu .results li:hover {
   background: #f3f3f3;
 }
