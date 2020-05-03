@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -12,8 +13,9 @@ import (
 
 // Summary represents the device summary in the dashboard.
 type Summary struct {
-	SensorID     string  `json:"id"`
-	SensorType   string  `json:"category"`
+	ID           string  `json:"id"`
+	Category     string  `json:"category"`
+	Controller   string  `json:"controller"`
 	ReportLag    int     `json:"report_lag"`
 	CurrentVolts float64 `json:"current_volts"`
 	Status       string  `json:"status"`
@@ -34,6 +36,19 @@ type Detail struct {
 	// SoilMoisture []*SoilMoisture
 }
 
+type ResponseOne struct {
+	Data Data `json:"data"`
+}
+
+type ResponseMany struct {
+	Data []*Data `json:"data"`
+}
+
+type Data struct {
+	ID         string      `json:"id"`
+	Attributes interface{} `json:"attributes"`
+}
+
 type DataAPI struct {
 	bqClient *clients.Bigquery
 	log      *logrus.Entry
@@ -49,14 +64,31 @@ func NewDataAPI(bq *clients.Bigquery, log *logrus.Entry) *DataAPI {
 // handler to get device summary
 func (h *DataAPI) GetDevices(w http.ResponseWriter, r *http.Request) {
 	// validate request
-	// devices, err := h.bqClient.GetDevices()
+	// query := "SELECT * FROM `%s` WHERE CreatedAt >= Timestamp(DATE_ADD(CURRENT_DATE(), INTERVAL -7 DAY)) ORDER BY CreatedAt;"
+	// iterator, err := h.bqClient.QueryTable(context.Background, query)
 	// if err != nil {
 	// 	// write error response
 	// }
 
+	// iterate through results
+	// calculate values for dashboard
+	// write response
+
 	// success response
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, "/devices")
+	response := ResponseMany{
+		Data: []*Data{
+			{
+				ID: "1",
+				Attributes: Summary{
+					Category:     "testCategory",
+					Controller:   "testController",
+					CurrentVolts: 1.5,
+					Status:       "down",
+				},
+			},
+		},
+	}
+	json.NewEncoder(w).Encode(response)
 }
 
 // handler to get device details

@@ -6,8 +6,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/hendrik-the-ee/irrigationSys/clients"
+	"github.com/hendrik-the-ee/irrigationSys/handlers"
 	"github.com/hendrik-the-ee/irrigationSys/hydrolog"
-
 	"github.com/kelseyhightower/envconfig"
 )
 
