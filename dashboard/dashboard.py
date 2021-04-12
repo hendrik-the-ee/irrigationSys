@@ -9,6 +9,7 @@ import pandas as pd
 import pandas_gbq as pd_gbq
 from flask_caching import Cache
 import re
+import numpy as np
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -118,6 +119,10 @@ WHERE CreatedAt BETWEEN '{start}' AND '{end}' GROUP BY CreatedAt ORDER BY Create
         y = ['SoilMoisture']
 
     df = pd_gbq.read_gbq(sql, project_id=project_id)
+
+    if fig_type == 'soil_moisture':
+        df.loc[df['SoilMoisture'] > 1024, 'SoilMoisture'] = 1024
+        df['SoilMoisture'] = np.log(df['SoilMoisture'])
 
     x = 'CreatedAt'
     fig = px.scatter(df, x=x, y=y, labels={"value": "Value", "CreatedAt": "Datetime", "variable": "Legend"})
