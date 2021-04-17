@@ -146,7 +146,8 @@ def get_soil_moisture_figure(start_date, end_date):
     if df.empty:
         return None
 
-    df.where(df['SoilMoisture'] > 1024, 1024, inplace=True)
+    df = df.dropna()
+    df.replace((df['SoilMoisture'] > 1024), 1024, inplace=True)
     df.replace(0, 1, inplace=True)
     df['SoilMoisture'] = np.log(df['SoilMoisture'])
     df = df[~(df['SoilMoisture'] > 7.2)]
