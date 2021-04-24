@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 
 	"cloud.google.com/go/storage"
 	"github.com/gorilla/mux"
@@ -17,9 +18,10 @@ import (
 )
 
 type Config struct {
-	Filepath    string `envconfig:"FILE_STORAGE_PATH" required:"true"`
-	BucketName  string `envconfig:"BUCKET_NAME" required:"true"`
-	GoogleCreds string `envconfig:"GOOGLE_APPLICATION_CREDENTIALS" required:"true"`
+	Filepath       string `envconfig:"FILE_STORAGE_PATH" required:"true"`
+	BucketName     string `envconfig:"BUCKET_NAME" required:"true"`
+	GoogleCreds    string `envconfig:"GOOGLE_APPLICATION_CREDENTIALS" required:"true"`
+	SendgridAPIKey string `envconfig:"SENDGRID_API_KEY" required:"true"`
 }
 
 func main() {
@@ -40,6 +42,15 @@ func main() {
 		hlog.Fatalf("couldn't create google storage client: %v", err)
 	}
 	gcs := clients.NewCloudStorage(config.BucketName, gcp)
+
+	key := os.Getenv("SENDGRID_API_KEY")
+	email := clients.NewEmail(key)
+	// TODO: update to send when temp is high/low
+	err = email.Send()
+	if err != nil {
+		hlog.Infof("error sending email: %+v", err)
+	}
+	hlog.Info("SENT EMAIL")
 
 	h := handlers.NewSensorData(dm, gcs, hlog, config.Filepath)
 
