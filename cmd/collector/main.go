@@ -17,9 +17,13 @@ import (
 )
 
 type Config struct {
-	Filepath    string `envconfig:"FILE_STORAGE_PATH" required:"true"`
-	BucketName  string `envconfig:"BUCKET_NAME" required:"true"`
-	GoogleCreds string `envconfig:"GOOGLE_APPLICATION_CREDENTIALS" required:"true"`
+	Filepath       string `envconfig:"FILE_STORAGE_PATH" required:"true"`
+	BucketName     string `envconfig:"BUCKET_NAME" required:"true"`
+	GoogleCreds    string `envconfig:"GOOGLE_APPLICATION_CREDENTIALS" required:"true"`
+	SendgridAPIKey string `envconfig:"SENDGRID_API_KEY" required:"true"`
+	FromEmail      string `envconfig:"FROM_EMAIL" required:"true"`
+	ToEmail        string `envconfig:"TO_EMAIL" required:"true"`
+	CCEmail        string `envconfig:"CC_EMAIL" required:"true"`
 }
 
 func main() {
@@ -41,7 +45,14 @@ func main() {
 	}
 	gcs := clients.NewCloudStorage(config.BucketName, gcp)
 
-	h := handlers.NewSensorData(dm, gcs, hlog, config.Filepath)
+	email := clients.NewEmail(
+		config.SendgridAPIKey,
+		config.FromEmail,
+		config.ToEmail,
+		config.CCEmail,
+	)
+
+	h := handlers.NewSensorData(dm, gcs, email, hlog, config.Filepath)
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/data", h.CollectData).Methods("POST")
