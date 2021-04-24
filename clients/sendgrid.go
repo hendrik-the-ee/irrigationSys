@@ -5,7 +5,6 @@ package clients
 import (
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/sendgrid/sendgrid-go"
@@ -19,31 +18,43 @@ const (
 )
 
 type Email struct {
-	client *sendgrid.Client
+	client    *sendgrid.Client
+	fromEmail string
+	toEmail   string
+	ccEmail   string
 }
 
-func NewEmail(apiKey string) *Email {
+func NewEmail(apiKey string, fromEmail, toEmail, ccEmail string) *Email {
 	client := sendgrid.NewSendClient(apiKey)
 	return &Email{
-		client: client,
+		client:    client,
+		fromEmail: fromEmail,
+		toEmail:   toEmail,
+		ccEmail:   ccEmail,
 	}
 }
 
-// TODO update to accept message object
-func (e *Email) Send() error {
-	from := mail.NewEmail("Example User", "hlhendy@gmail.com")
-	subject := "Sending with SendGrid is Fun"
-	to := mail.NewEmail("Example User", "hlhendy@gmail.com")
-	plainTextContent := "and easy to do anywhere, even with Go"
-	htmlContent := "<strong>and easy to do anywhere, even with Go</strong>"
+func (e *Email) Send(soilTemp float32, warningType string) error {
+	from := mail.NewEmail("Hydrobot", e.fromEmail)
+	subject := fmt.Sprintf("Warning! Temp in the greenhouse is too %s", warningType)
+	to := mail.NewEmail("Greenhouse Staff", e.toEmail)
+	cc := mail.NewEmail("Greenhouse Staff", e.ccEmail)
+	plainTextBase := fmt.Sprintf("The temp in the greenhouse is %f&#176; C ", soilTemp)
+	plainTextContent := ""
+	htmlContent := ""
+	if warningType == "high" {
+		plainTextContent = fmt.Sprintf("%s, go open it!", plainTextBase)
+		htmlContent = fmt.Sprintf("<strong>%s</strong>", plainTextContent)
+	}
+	if warningType == "low" {
+		plainTextContent = fmt.Sprintf("%s, go close it!", plainTextBase)
+		htmlContent = fmt.Sprintf("<strong>%s</strong>", plainTextContent)
+	}
 	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-	response, err := e.client.Send(message)
+	message.Personalizations[0].AddCCs(cc)
+	_, err := e.client.Send(message)
 	if err != nil {
-		log.Println(err)
-	} else {
-		fmt.Println(response.StatusCode)
-		fmt.Println(response.Body)
-		fmt.Println(response.Headers)
+		return err
 	}
 
 	return nil

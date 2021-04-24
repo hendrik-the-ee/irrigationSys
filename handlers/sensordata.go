@@ -18,15 +18,17 @@ const FileUploadFrequency = 12 * time.Hour
 type SensorData struct {
 	dm             *datamanager.Client
 	gcs            *clients.CloudStorage
+	email          *clients.Email
 	filepath       string
 	log            *logrus.Entry
 	lastUploadTime time.Time
 }
 
-func NewSensorData(dm *datamanager.Client, gcs *clients.CloudStorage, log *logrus.Entry, fp string) *SensorData {
+func NewSensorData(dm *datamanager.Client, gcs *clients.CloudStorage, e *clients.Email, log *logrus.Entry, fp string) *SensorData {
 	return &SensorData{
 		dm:             dm,
 		gcs:            gcs,
+		email:          e,
 		log:            log,
 		filepath:       fp,
 		lastUploadTime: time.Now().UTC(),
@@ -73,6 +75,22 @@ func (h *SensorData) CollectData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.WithFields(fields).Info("data received")
+
+	if sd.SoilTemp <= 5 {
+		err := h.email.Send(sd.SoilTemp, "low")
+		if err != nil {
+			log.WithFields(fields).WithError(err).Error("error sending temp low email")
+		}
+		log.Info("Sent email warning: low")
+	}
+
+	if sd.SoilTemp >= 45 {
+		err := h.email.Send(sd.SoilTemp, "high")
+		if err != nil {
+			log.WithFields(fields).WithError(err).Error("error sending temp high email")
+		}
+		log.Info("Sent email warning: high")
+	}
 
 	if err := h.dm.AppendToFile(&sd); err != nil {
 		fields := logrus.Fields{

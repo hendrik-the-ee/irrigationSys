@@ -44,15 +44,12 @@ func main() {
 	gcs := clients.NewCloudStorage(config.BucketName, gcp)
 
 	key := os.Getenv("SENDGRID_API_KEY")
-	email := clients.NewEmail(key)
-	// TODO: update to send when temp is high/low
-	err = email.Send()
-	if err != nil {
-		hlog.Infof("error sending email: %+v", err)
-	}
-	hlog.Info("SENT EMAIL")
+	fromEmail := os.Getenv("FROM_EMAIL")
+	toEmail := os.Getenv("TO_EMAIL")
+	ccEmail := os.Getenv("CC_EMAIL")
+	email := clients.NewEmail(key, fromEmail, toEmail, ccEmail)
 
-	h := handlers.NewSensorData(dm, gcs, hlog, config.Filepath)
+	h := handlers.NewSensorData(dm, gcs, email, hlog, config.Filepath)
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/data", h.CollectData).Methods("POST")
