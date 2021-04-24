@@ -7,4 +7,3 @@ app-env
 *~
 *.log
 run_weather.sh
-sendgrid.env

@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"os"
 
 	"cloud.google.com/go/storage"
 	"github.com/gorilla/mux"
@@ -22,6 +21,9 @@ type Config struct {
 	BucketName     string `envconfig:"BUCKET_NAME" required:"true"`
 	GoogleCreds    string `envconfig:"GOOGLE_APPLICATION_CREDENTIALS" required:"true"`
 	SendgridAPIKey string `envconfig:"SENDGRID_API_KEY" required:"true"`
+	FromEmail      string `envconfig:"FROM_EMAIL" required:"true"`
+	ToEmail        string `envconfig:"TO_EMAIL" required:"true"`
+	CCEmail        string `envconfig:"CC_EMAIL" required:"true"`
 }
 
 func main() {
@@ -43,11 +45,12 @@ func main() {
 	}
 	gcs := clients.NewCloudStorage(config.BucketName, gcp)
 
-	key := os.Getenv("SENDGRID_API_KEY")
-	fromEmail := os.Getenv("FROM_EMAIL")
-	toEmail := os.Getenv("TO_EMAIL")
-	ccEmail := os.Getenv("CC_EMAIL")
-	email := clients.NewEmail(key, fromEmail, toEmail, ccEmail)
+	email := clients.NewEmail(
+		config.SendgridAPIKey,
+		config.FromEmail,
+		config.ToEmail,
+		config.CCEmail,
+	)
 
 	h := handlers.NewSensorData(dm, gcs, email, hlog, config.Filepath)
 
