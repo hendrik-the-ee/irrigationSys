@@ -80,16 +80,18 @@ func (h *SensorData) CollectData(w http.ResponseWriter, r *http.Request) {
 		err := h.email.Send(sd.SoilTemp, "low")
 		if err != nil {
 			log.WithFields(fields).WithError(err).Error("error sending temp low email")
+		} else {
+			log.Info("Sent email warning: low")
 		}
-		log.Info("Sent email warning: low")
 	}
 
 	if sd.SoilTemp >= 45 {
 		err := h.email.Send(sd.SoilTemp, "high")
 		if err != nil {
 			log.WithFields(fields).WithError(err).Error("error sending temp high email")
+		} else {
+			log.Info("Sent email warning: high")
 		}
-		log.Info("Sent email warning: high")
 	}
 
 	if err := h.dm.AppendToFile(&sd); err != nil {
