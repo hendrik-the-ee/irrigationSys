@@ -4,27 +4,26 @@ package clients
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
-)
-
-const (
-	MaxEmailAddressLength = 254
-	MaxSubjectLineLength  = 78
+	"github.com/sirupsen/logrus"
 )
 
 type Email struct {
+	log       *logrus.Entry
 	client    *sendgrid.Client
 	fromEmail string
 	toEmail   string
 	ccEmail   string
 }
 
-func NewEmail(apiKey string, fromEmail, toEmail, ccEmail string) *Email {
+func NewEmail(l *logrus.Entry, apiKey, fromEmail, toEmail, ccEmail string) *Email {
 	client := sendgrid.NewSendClient(apiKey)
 	return &Email{
 		client:    client,
+		log:       l,
 		fromEmail: fromEmail,
 		toEmail:   toEmail,
 		ccEmail:   ccEmail,
@@ -49,9 +48,13 @@ func (e *Email) Send(soilTemp float32, warningType string) error {
 	}
 	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
 	message.Personalizations[0].AddCCs(cc)
-	_, err := e.client.Send(message)
+	response, err := e.client.Send(message)
 	if err != nil {
 		return err
+	}
+	if strings.Contains(response.Body, "errors") {
+		e.log.Errorf("sendgrid response: %s %d....", response.Body, response.StatusCode)
+		return fmt.Errorf("Error sending email: %s", response.Body)
 	}
 
 	return nil

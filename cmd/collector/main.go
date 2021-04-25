@@ -46,6 +46,7 @@ func main() {
 	gcs := clients.NewCloudStorage(config.BucketName, gcp)
 
 	email := clients.NewEmail(
+		hlog,
 		config.SendgridAPIKey,
 		config.FromEmail,
 		config.ToEmail,
