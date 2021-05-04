@@ -2,8 +2,6 @@ import React from 'react';
 import logo from './agri-plots.png';
 import './App.css';
 import { BrowserRouter, Route, Switch } from 'react-router-dom';
-//import Login from '../Login/Login';
-//import Logout from '../Logout/Logout';
 import Dashboard from '../Dashboard/Dashboard';
 import NavBar from '../NavBar/NavBar';
 import { useAuth0 } from "@auth0/auth0-react";
@@ -18,10 +16,9 @@ const App = () => {
 
   return (
     <div className="App">
-      <header className="App-header">
-	  <img src={logo} className="App-logo" alt="logo" />
-      </header>
-      <div className="wrapper">
+	<header className="App-header">
+          <img src={logo} className="App-logo" alt="logo" />
+	</header>
 	  <BrowserRouter>
 	  <NavBar />
 	  <Container className="flex-grow-1 mt-5">
@@ -30,7 +27,6 @@ const App = () => {
           </Switch>
 	  </Container>
 	  </BrowserRouter>
-      </div>
     </div>
   );
 };
