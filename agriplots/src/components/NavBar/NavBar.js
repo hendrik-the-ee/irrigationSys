@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { NavLink as RouterNavLink } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Login from '../Login/Login';
-import Logout from '../Logout/Logout';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 import {
@@ -14,7 +13,6 @@ import {
   Nav,
   NavItem,
   NavLink,
-  Button,
   UncontrolledDropdown,
   DropdownToggle,
   DropdownMenu,
@@ -24,13 +22,13 @@ import {
 import { useAuth0 } from "@auth0/auth0-react";
 
 const NavBar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const {
+const [isOpen, setIsOpen] = useState(false);
+const {
     user,
     isAuthenticated,
     logout,
   } = useAuth0();
-   const toggle = () => setIsOpen(!isOpen);
+const toggle = () => setIsOpen(!isOpen);
 
   const logoutWithRedirect = () =>
     logout({
@@ -48,7 +46,7 @@ const NavBar = () => {
               <NavItem>
                 <NavLink
                   tag={RouterNavLink}
-                  to="/"
+                  to="/home"
                   exact
                   activeClassName="router-link-exact-active"
                 >
