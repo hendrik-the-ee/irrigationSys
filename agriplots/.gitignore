@@ -3,3 +3,5 @@
 *.iml
 .directory
 .idea
+__pycache__
+cache-directory
