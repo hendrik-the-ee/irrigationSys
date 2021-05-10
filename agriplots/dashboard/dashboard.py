@@ -18,12 +18,18 @@ import re
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-app.title = "Hydrobot"
+app = dash.Dash(
+    __name__,
+    external_stylesheets=external_stylesheets,
+    url_base_pathname="/dashboard/",
+)
+
+app.title = "Agriplots"
 cache = Cache(app.server, config={
     'CACHE_TYPE': 'filesystem',
     'CACHE_DIR': 'cache-directory'
 })
+
 TIMEOUT = 0 #6000
 PROJECT_ID = os.environ.get("PROJECT_ID", "")
 WEATHER_DATA = os.environ.get("WEATHER_DATA", "")
@@ -46,7 +52,7 @@ def get_dashboard(start_date=None, end_date=None):
         end_date = today
 
     app.layout = html.Div(children=[
-        html.H1(children='Hydrobot Dashboard'),
+        html.H1(children='Agriplots Dashboard'),
 
         dcc.DatePickerRange(
             id='date-picker-range',
