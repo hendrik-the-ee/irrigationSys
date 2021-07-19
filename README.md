@@ -1,5 +1,5 @@
 # irrigationSys
-general design, code and firmware for an expandable IOT irrigation system
+general design, code and firmware for an expandable IoT irrigation system
 
 ## Deploy Steps
 1. ssh into pi
