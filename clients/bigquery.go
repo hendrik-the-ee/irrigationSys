@@ -45,11 +45,21 @@ func (b *Bigquery) QueryTable(ctx context.Context, statement string) (*bigquery.
 	defer client.Close()
 
 	q := client.Query(statement)
+	q.Location = "US"
 
-	rowIterator, err := q.Read(ctx)
+	job, err := q.Run(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("bigquery.QueryTable.Read: %v", err)
+		return nil, fmt.Errorf("bigquery.QueryTable.Run: %v", err)
 	}
 
-	return rowIterator, nil
+	status, err := job.Wait(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := status.Err(); err != nil {
+		return nil, err
+	}
+
+	return job.Read(ctx)
 }
