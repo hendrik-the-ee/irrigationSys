@@ -23,7 +23,7 @@ type Config struct {
 
 func main() {
 	var config Config
-	envconfig.Process("collector", &config)
+	envconfig.Process("get data", &config)
 
 	var start string
 	flag.StringVar(&start, "start", "", "start date YYYY-MM-DD")
